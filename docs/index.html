@@ -1,0 +1,1122 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>유플러스 시스템 - 주차/팀 분리 식별 논술 일정 지도</title>
+    <style>
+        :root {
+            --page-bg: #f3f5f8;
+            --panel-bg: #ffffff;
+            --panel-soft: #f8fafc;
+            --line: #d9e0e7;
+            --line-soft: #e9edf2;
+            --text: #26323f;
+            --muted: #6c7784;
+            --shadow: 0 10px 24px rgba(31, 42, 55, 0.08);
+            --radius: 10px;
+        }
+
+        body { font-family: 'Malgun Gothic', sans-serif; padding: 24px; background-color: var(--page-bg); color: var(--text); margin: 0; }
+        .container { max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+        h2 { text-align: left; color: #182230; margin: 0 0 4px; font-size: 26px; font-weight: 900; letter-spacing: 0; }
+
+        .dashboard-layout {
+            display: grid;
+            grid-template-columns: 330px minmax(0, 1fr);
+            gap: 18px;
+            align-items: start;
+        }
+        
+        /* 필터링 버튼 영역 (상단) */
+        .filter-section {
+            background: var(--panel-bg);
+            padding: 16px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--line);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: sticky;
+            top: 18px;
+        }
+        .filter-row {
+            display: grid;
+            grid-template-columns: 74px minmax(0, 1fr);
+            align-items: start;
+            column-gap: 10px;
+            padding: 10px 12px;
+            border: 1px solid var(--line-soft);
+            border-radius: 8px;
+            background: var(--panel-soft);
+        }
+        .filter-label { font-weight: 900; color: var(--muted); font-size: 12px; min-height: 32px; display: flex; align-items: center; text-align: left; letter-spacing: 0; }
+        .filter-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+        .filter-row.is-single .filter-options { grid-template-columns: 1fr; }
+        
+        .filter-btn {
+            width: 100%;
+            min-height: 32px;
+            padding: 7px 12px;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            background-color: #ffffff;
+            color: #495663;
+            transition: all 0.2s ease;
+            box-shadow: none;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .filter-btn:hover { background-color: #ffffff; transform: translateY(-1px); border-color: #9aa7b3; }
+        
+        #btn-all-all { border-color: #2c3e50; color: #2c3e50; }
+        #btn-week-pre { border-color: #9b59b6; color: #9b59b6; }
+        #btn-week-w1 { border-color: #e74c3c; color: #e74c3c; }
+        #btn-week-w2 { border-color: #3498db; color: #3498db; }
+        #btn-week-w3 { border-color: #27ae60; color: #27ae60; }
+        
+        #btn-team-t1 { border-color: #e67e22; color: #e67e22; }
+        #btn-team-t2 { border-color: #16a085; color: #16a085; }
+        #btn-team-t3 { border-color: #e84393; color: #e84393; }
+        #btn-team-t4 { border-color: #2980b9; color: #2980b9; }
+
+        .filter-btn.active-all { background-color: #2c3e50 !important; color: white !important; }
+        .filter-btn.active-pre { background-color: #9b59b6 !important; color: white !important; }
+        .filter-btn.active-w1 { background-color: #e74c3c !important; color: white !important; }
+        .filter-btn.active-w2 { background-color: #3498db !important; color: white !important; }
+        .filter-btn.active-w3 { background-color: #27ae60 !important; color: white !important; }
+        
+        .filter-btn.active-t1 { background-color: #e67e22 !important; color: white !important; }
+        .filter-btn.active-t2 { background-color: #16a085 !important; color: white !important; }
+        .filter-btn.active-t3 { background-color: #e84393 !important; color: white !important; }
+        .filter-btn.active-t4 { background-color: #2980b9 !important; color: white !important; }
+
+        .filter-export {
+            margin-top: 2px;
+            padding: 12px;
+            border: 1px solid var(--line-soft);
+            border-radius: 8px;
+            background: #f7fbff;
+        }
+        .export-btn {
+            width: 100%;
+            min-height: 38px;
+            border: 1px solid #2563eb;
+            border-radius: 7px;
+            background: #2563eb;
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .export-btn:hover {
+            background: #1d4ed8;
+            border-color: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        /* 지도 영역 (중간) */
+        .map-wrapper {
+            width: 100%;
+            max-width: none;
+            margin: 0;
+            padding: 14px;
+            border-radius: var(--radius);
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow);
+            background-color: var(--panel-bg);
+            overflow: hidden;
+        }
+        .map-board {
+            display: grid;
+            grid-template-columns: 190px minmax(0, 1fr);
+            grid-template-areas:
+                "gyeongin seoul"
+                "bottom bottom";
+            gap: 12px;
+            align-items: center;
+            min-height: 660px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(248, 250, 252, 0.94), rgba(239, 246, 251, 0.98));
+            padding: 14px;
+        }
+        .map-canvas { grid-area: seoul; position: relative; width: 90%; max-width: 860px; margin: 0 auto; }
+        .map-canvas img { width: 100%; display: block; height: auto; }
+
+        .outside-bottom-row {
+            grid-area: bottom;
+            display: grid;
+            grid-template-columns: 1.4fr 1fr 1fr;
+            gap: 10px;
+            align-items: start;
+            padding-top: 4px;
+        }
+        .outside-region {
+            min-width: 0;
+            padding: 8px 6px;
+        }
+        .outside-region.gyeongin { grid-area: gyeongin; }
+        .outside-region-label {
+            color: #334155;
+            font-size: 20px;
+            font-weight: 900;
+            margin-bottom: 10px;
+            padding-left: 0;
+            letter-spacing: 0;
+        }
+        .outside-node-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+        }
+        .map-board .outside-region .uni-node {
+            position: static;
+            display: inline-flex;
+            align-items: center;
+            width: auto;
+            transform: none;
+            font-size: 11px;
+            padding: 5px 9px;
+            box-shadow: 0 2px 5px rgba(31,42,55,0.12);
+        }
+        .map-board .outside-region .uni-node:hover {
+            transform: translateY(-1px);
+        }
+        
+        .uni-node { position: absolute; padding: 5px 11px; border-radius: 18px; background-color: #ffffff; font-weight: 800; font-size: 12px; color: #2c3e50; white-space: nowrap; transition: all 0.2s ease; transform: translate(-50%, -50%); cursor: pointer; box-shadow: 0 3px 8px rgba(31,42,55,0.16); z-index: 2; border: 1px solid #bdc3c7; }
+        .uni-node:hover { transform: translate(-50%, -50%) scale(1.15); z-index: 10 !important; border-color: #2c3e50; }
+
+        .uni-node::before { font-weight: 900; margin-right: 4px; }
+        .uni-node[data-week="pre"]::before { content: "[수능전]"; color: #9b59b6; }
+        .uni-node[data-week="w1"]::before  { content: "[1주]"; color: #e74c3c; }
+        .uni-node[data-week="w2"]::before  { content: "[2주]"; color: #3498db; }
+        .uni-node[data-week="w3"]::before  { content: "[3주]"; color: #27ae60; }
+        .uni-node[data-week="tbd"]::before { content: "[미정]"; color: #7f8c8d; }
+
+        .uni-node[data-team]::before { color: rgba(255,255,255,0.9); }
+
+        .uni-node.bg-team-t1 { background-color: #e67e22 !important; color: white !important; border-color: #e67e22 !important; border-radius: 20px !important; } 
+        .uni-node.bg-team-t2 { background-color: #16a085 !important; color: white !important; border-color: #16a085 !important; border-radius: 4px !important; } 
+        .uni-node.bg-team-t3 { background-color: #e84393 !important; color: white !important; border-color: #e84393 !important; border-radius: 14px 0 14px 0 !important; } 
+        .uni-node.bg-team-t4 { background-color: #2980b9 !important; color: white !important; border-color: #2980b9 !important; border-radius: 0 14px 0 14px !important; } 
+
+        .uni-node.dimmed { opacity: 0.15 !important; background-color: #e9ecef !important; color: #adb5bd !important; border-color: #dee2e6 !important; z-index: 1; box-shadow: none !important; pointer-events: none; }
+        .uni-node.dimmed::before { color: #adb5bd !important; }
+
+        .node-tooltip {
+            position: fixed;
+            display: none;
+            z-index: 200;
+            max-width: 260px;
+            padding: 8px 10px;
+            border-radius: 7px;
+            background: rgba(24, 34, 48, 0.96);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 800;
+            line-height: 1.45;
+            white-space: pre-line;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.22);
+            pointer-events: none;
+        }
+
+        /* 팀 배정 설정 영역 (하단) */
+        .team-settings-container { background: var(--panel-bg); padding: 18px; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 0; border: 1px solid var(--line); }
+        .team-settings-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .team-settings-header h3 { margin: 0; color: #2c3e50; font-size: 17px; }
+        .auto-save-badge { padding: 6px 10px; background-color: #eef8f1; color: #2e7d32; border: 1px solid #cfe9d5; border-radius: 7px; font-weight: bold; font-size: 12px; display: flex; align-items: center; gap: 5px; }
+        
+        .teams-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; align-items: stretch; }
+        .team-card { background: var(--panel-soft); border: 1px solid var(--line-soft); border-radius: 8px; padding: 14px; border-top: 4px solid; overflow: visible; display: flex; flex-direction: column; }
+        .team-card.t1 { border-top-color: #e67e22; }
+        .team-card.t2 { border-top-color: #16a085; }
+        .team-card.t3 { border-top-color: #e84393; }
+        .team-card.t4 { border-top-color: #2980b9; }
+        .team-card h4 { margin: 0 0 12px 0; text-align: left; font-size: 15px; }
+        
+        .member-row { display: flex; align-items: flex-start; margin-bottom: 8px; gap: 6px; position: relative; padding: 7px; border: 1px solid #e6ebf0; border-radius: 7px; background: #fff; }
+        .member-row:last-child { margin-bottom: 0; }
+        
+        .role-label { width: 38px; height: 28px; line-height: 18px; font-size: 11px; font-weight: bold; color: #495057; text-align: center; background: #eef1f4; padding: 5px 2px; border-radius: 5px; flex-shrink: 0; box-sizing: border-box; }
+        .name-input { width: 50px; height: 28px; padding: 4px; border: 1px solid #ced4da; border-radius: 5px; font-size: 12px; text-align: center; outline: none; flex-shrink: 0; box-sizing: border-box; }
+        .name-input:focus { border-color: #adb5bd; }
+
+        /* 커스텀 멀티 셀렉트 */
+        .custom-select { flex: 1; position: relative; min-width: 0; }
+        .select-display { min-height: 28px; padding: 5px 7px; border: 1px solid #ced4da; border-radius: 5px; font-size: 11px; background: #fff; cursor: pointer; white-space: normal; word-break: keep-all; line-height: 1.4; box-sizing: border-box; user-select: none; }
+        .select-display:hover { border-color: #adb5bd; }
+        
+        .select-dropdown { display: none; position: absolute; bottom: 100%; left: 0; width: 100%; min-width: 180px; max-height: 220px; overflow-y: auto; background: #fff; border: 1px solid #ced4da; border-radius: 7px; box-shadow: 0 -8px 20px rgba(31,42,55,0.12); z-index: 50; padding: 6px; margin-bottom: 4px; }
+        .select-dropdown.show { display: block; }
+        .select-dropdown label { display: block; padding: 4px 5px; font-size: 12px; cursor: pointer; }
+        .select-dropdown label:hover { background: #f1f3f5; }
+        .select-dropdown input[type="checkbox"] { margin-right: 6px; cursor: pointer; }
+
+        /* 개인 담당 보기 버튼 (다중 선택 토글 가능) */
+        .mini-view-btn { height: 28px; padding: 0 9px; font-size: 11px; font-weight: bold; background: #eef1f4; color: #495057; border: 1px solid #ced4da; border-radius: 5px; cursor: pointer; flex-shrink: 0; transition: 0.2s; box-sizing: border-box; }
+        .mini-view-btn:hover { background: #dee2e6; }
+        .mini-view-btn.active-mini { background: #2c3e50; color: white; border-color: #2c3e50; }
+
+        .text-gray { color: #adb5bd !important; }
+
+        /* 모달 (팝업창) 레이아웃 */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 100; align-items: center; justify-content: center; }
+        .modal-content { background: #fff; padding: 30px; border-radius: 12px; width: 90%; max-width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; }
+        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 28px; cursor: pointer; color: #adb5bd; }
+        .close-btn:hover { color: #dc3545; }
+        .modal-title { font-size: 22px; font-weight: bold; margin-top: 0; margin-bottom: 10px; }
+        .modal-manager-info { font-size: 14px; color: #fff; display: inline-block; padding: 4px 10px; border-radius: 4px; margin-bottom: 15px; font-weight: bold; background: #95a5a6; }
+        .modal-body { font-size: 15px; line-height: 1.6; color: #333; max-height: 400px; overflow-y: auto; border-top: 2px solid #f1f3f5; padding-top: 15px; }
+        .schedule-item { margin-bottom: 15px; background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 5px solid #bdc3c7; }
+        .schedule-date { font-weight: bold; margin-bottom: 5px; display: block; font-size: 16px; color: #2c3e50; }
+
+        .theme-week-pre { color: #9b59b6; } .border-week-pre { border-left-color: #9b59b6; }
+        .theme-week-w1 { color: #e74c3c; } .border-week-w1 { border-left-color: #e74c3c; }
+        .theme-week-w2 { color: #3498db; } .border-week-w2 { border-left-color: #3498db; }
+        .theme-week-w3 { color: #27ae60; } .border-week-w3 { border-left-color: #27ae60; }
+        .theme-week-tbd { color: #7f8c8d; } .border-week-tbd { border-left-color: #7f8c8d; }
+        #btn-contract-uncontracted { border-color: #6c757d; color: #6c757d; border-style: dashed; }
+        .filter-btn.active-uncontracted { background-color: #6c757d !important; color: white !important; }
+
+        .uni-node.contract-uncontracted {
+            background-color: #f8f9fa;
+            color: #6c757d;
+            border-color: #6c757d;
+            border-style: dashed;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+        }
+        .uni-node.contract-uncontracted::after {
+            content: "미계약";
+            display: inline-block;
+            margin-left: 5px;
+            padding: 1px 4px;
+            border-radius: 3px;
+            background: #e9ecef;
+            color: #495057;
+            font-size: 10px;
+            font-weight: 900;
+            vertical-align: 1px;
+        }
+
+        .uncontracted-section {
+            background: var(--panel-bg);
+            padding: 18px;
+            border-radius: var(--radius);
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow);
+            margin-bottom: 0;
+            order: 20;
+        }
+        .uncontracted-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .uncontracted-header h3 { margin: 0; color: #2c3e50; font-size: 18px; }
+        .uncontracted-note { color: #6c757d; font-size: 12px; font-weight: 700; }
+        .uncontracted-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+        .uncontracted-card { border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; background: #f8f9fa; }
+        .uncontracted-card h4 { margin: 0; padding: 10px 12px; background: #eef1f4; color: #343a40; font-size: 14px; }
+        .uncontracted-school-list { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; border-top: 1px solid #e9ecef; }
+        .uncontracted-school-btn {
+            border: 1px solid #ced4da;
+            background: #fff;
+            color: #343a40;
+            border-radius: 18px;
+            padding: 7px 12px;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .uncontracted-school-btn:hover { border-color: #6c757d; transform: translateY(-1px); }
+        .uncontracted-school-btn.active { background: #6c757d; border-color: #6c757d; color: #fff; }
+        .uncontracted-detail-panel {
+            margin-top: 14px;
+            padding: 16px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            background: #fbfcfd;
+        }
+        .uncontracted-detail-title { margin: 0 0 10px 0; color: #2c3e50; font-size: 16px; }
+        .uncontracted-detail-body .schedule-item:last-child { margin-bottom: 0; }
+        @media (max-width: 980px) {
+            .dashboard-layout { grid-template-columns: 1fr; }
+            .filter-section { position: static; }
+        }
+        @media (max-width: 1160px) {
+            .map-board { grid-template-columns: 1fr; grid-template-areas: "seoul" "gyeongin" "bottom"; min-height: 0; }
+            .map-canvas { width: 94%; }
+            .outside-bottom-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+        @media (max-width: 760px) {
+            body { padding: 14px; }
+            h2 { font-size: 22px; text-align: center; }
+            .filter-row { grid-template-columns: 1fr; row-gap: 8px; }
+            .filter-label { min-height: auto; }
+            .map-wrapper { padding: 10px; }
+            .map-board { padding: 10px; }
+            .map-canvas { width: 100%; }
+            .outside-bottom-row { grid-template-columns: 1fr; }
+            .outside-region-label { font-size: 16px; }
+            .team-settings-header { align-items: flex-start; flex-direction: column; gap: 8px; }
+            .uncontracted-grid { grid-template-columns: 1fr; }
+            .uncontracted-header { align-items: flex-start; flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>유플러스 시스템 - 주차/팀 분리 식별 논술 일정 지도</h2>
+
+    <div class="dashboard-layout">
+    <div class="filter-section">
+        <div class="filter-row is-single">
+            <div class="filter-label">기본 보기</div>
+            <div class="filter-options">
+                <button class="filter-btn active-all" id="btn-all-all" onclick="filterMap('all', 'all')">전체 지도 보기</button>
+            </div>
+        </div>
+        <div class="filter-row">
+            <div class="filter-label">일정</div>
+            <div class="filter-options">
+                <button class="filter-btn" id="btn-week-pre" onclick="filterMap('week', 'pre')">수능 이전</button>
+                <button class="filter-btn" id="btn-week-w1" onclick="filterMap('week', 'w1')">1주차</button>
+                <button class="filter-btn" id="btn-week-w2" onclick="filterMap('week', 'w2')">2주차</button>
+                <button class="filter-btn" id="btn-week-w3" onclick="filterMap('week', 'w3')">3주차</button>
+            </div>
+        </div>
+        <div class="filter-row">
+            <div class="filter-label">담당</div>
+            <div class="filter-options">
+                <button class="filter-btn" id="btn-team-t1" onclick="filterMap('team', 't1')">1팀</button>
+                <button class="filter-btn" id="btn-team-t2" onclick="filterMap('team', 't2')">2팀</button>
+                <button class="filter-btn" id="btn-team-t3" onclick="filterMap('team', 't3')">3팀</button>
+                <button class="filter-btn" id="btn-team-t4" onclick="filterMap('team', 't4')">경영관리</button>
+            </div>
+        </div>
+        <div class="filter-row is-single">
+            <div class="filter-label">계약 구분</div>
+            <div class="filter-options">
+                <button class="filter-btn" id="btn-contract-uncontracted" onclick="filterMap('contract', 'uncontracted')">미계약 전체</button>
+            </div>
+        </div>
+        <div class="filter-export">
+            <button class="export-btn" type="button" onclick="downloadExcel()">전체 데이터 엑셀 다운로드</button>
+        </div>
+    </div>
+
+    <div class="map-wrapper" id="mapWrapper">
+        <div class="map-board">
+        <div class="outside-region gyeongin">
+            <div class="outside-region-label">경인지역</div>
+            <div class="outside-node-list">
+                <div class="uni-node" data-uni="가톨릭대" data-week="pre" onclick="showDetails('가톨릭대')">가톨릭대</div>
+                <div class="uni-node" data-uni="인하대" data-week="w3" onclick="showDetails('인하대')">인하대</div>
+                <div class="uni-node contract-uncontracted" data-uni="한국항공대" data-week="w1" data-contract="uncontracted" onclick="showDetails('한국항공대')">한국항공대</div>
+                <div class="uni-node contract-uncontracted" data-uni="한국공학대" data-week="w1" data-contract="uncontracted" onclick="showDetails('한국공학대')">한국공학대</div>
+            </div>
+        </div>
+        <div class="map-canvas">
+        <img src="seoul-map-clean-hd.png" alt="서울 대학 지도">
+        
+        <div class="uni-node" data-uni="상명대" data-week="pre" style="top: 42%; left: 42%;" onclick="showDetails('상명대')">상명대</div>
+        <div class="uni-node" data-uni="서울시립대" data-week="pre" style="top: 51%; left: 71%;" onclick="showDetails('서울시립대')">서울시립대</div>
+        <div class="uni-node" data-uni="성신여대" data-week="pre" style="top: 39%; left: 59%;" onclick="showDetails('성신여대')">성신여대</div>
+        <div class="uni-node" data-uni="홍익대" data-week="pre" style="top: 53%; left: 36%;" onclick="showDetails('홍익대')">홍익대</div>
+        
+        <div class="uni-node" data-uni="가톨릭의대" data-week="w1" style="top: 76%; left: 54%;" onclick="showDetails('가톨릭의대')">가톨릭의대</div>
+        <div class="uni-node" data-uni="건국대" data-week="w1" style="top: 65%; left: 78%;" onclick="showDetails('건국대')">건국대</div>
+        <div class="uni-node" data-uni="경희대(서울)" data-week="w1" style="top: 33%; left: 71%;" onclick="showDetails('경희대(서울)')">경희대(서울)</div>
+        <div class="uni-node" data-uni="고려대" data-week="w1" style="top: 43%; left: 63%;" onclick="showDetails('고려대')">고려대</div>
+        <div class="uni-node" data-uni="동국대" data-week="w1" style="top: 55%; left: 58%;" onclick="showDetails('동국대')">동국대</div>
+        <div class="uni-node" data-uni="숙명여대" data-week="w1" style="top: 63%; left: 48%;" onclick="showDetails('숙명여대')">숙명여대</div>
+        <div class="uni-node" data-uni="숭실대" data-week="w1" style="top: 78%; left: 49%;" onclick="showDetails('숭실대')">숭실대</div>
+        <div class="uni-node" data-uni="서울과기대" data-week="w1" style="top: 27%; left: 75%;" onclick="showDetails('서울과기대')">서울과기대</div>
+
+        <div class="uni-node" data-uni="광운대" data-week="w2" style="top: 25%; left: 70%;" onclick="showDetails('광운대')">광운대</div>
+        <div class="uni-node" data-uni="덕성여대" data-week="w2" style="top: 18%; left: 62%;" onclick="showDetails('덕성여대')">덕성여대</div>
+        <div class="uni-node" data-uni="동덕여대" data-week="w2" style="top: 38%; left: 63%;" onclick="showDetails('동덕여대')">동덕여대</div>
+        <div class="uni-node" data-uni="세종대" data-week="w2" style="top: 59%; left: 76%;" onclick="showDetails('세종대')">세종대</div>
+        <div class="uni-node" data-uni="이화여대" data-week="w2" style="top: 52%; left: 45%;" onclick="showDetails('이화여대')">이화여대</div>
+        <div class="uni-node" data-uni="중앙대" data-week="w2" style="top: 73%; left: 46%;" onclick="showDetails('중앙대')">중앙대</div>
+        <div class="uni-node" data-uni="한국외대" data-week="w2" style="top: 30%; left: 77%;" onclick="showDetails('한국외대')">한국외대</div>
+        <div class="uni-node" data-uni="한양대" data-week="w2" style="top: 58%; left: 68%;" onclick="showDetails('한양대')">한양대</div>
+
+        <div class="uni-node" data-uni="국민대" data-week="w3" style="top: 36%; left: 54%;" onclick="showDetails('국민대')">국민대</div>
+        <div class="uni-node contract-uncontracted" data-uni="연세대(서울)" data-week="pre" data-contract="uncontracted" style="top: 57%; left: 41%;" onclick="showDetails('연세대(서울)')">연세대</div>
+        <div class="uni-node contract-uncontracted" data-uni="서강대" data-week="w1" data-contract="uncontracted" style="top: 58%; left: 43%;" onclick="showDetails('서강대')">서강대</div>
+        <div class="uni-node contract-uncontracted" data-uni="성균관대" data-week="w1" data-contract="uncontracted" style="top: 45%; left: 58%;" onclick="showDetails('성균관대')">성균관대</div>
+        <div class="uni-node contract-uncontracted" data-uni="서경대" data-week="pre" data-contract="uncontracted" style="top: 34%; left: 57%;" onclick="showDetails('서경대')">서경대</div>
+        </div>
+
+        <div class="outside-bottom-row">
+                <div class="outside-region south">
+                    <div class="outside-region-label">서울남부/경기남부</div>
+                    <div class="outside-node-list">
+                        <div class="uni-node" data-uni="강남대" data-week="w2" onclick="showDetails('강남대')">강남대</div>
+                        <div class="uni-node" data-uni="경희대(국제)" data-week="w1" onclick="showDetails('경희대(국제)')">경희대(국제)</div>
+                        <div class="uni-node" data-uni="단국대" data-week="pre" onclick="showDetails('단국대')">단국대</div>
+                        <div class="uni-node" data-uni="아주대" data-week="w2" onclick="showDetails('아주대')">아주대</div>
+                        <div class="uni-node" data-uni="을지대" data-week="tbd" onclick="showDetails('을지대')">을지대</div>
+                        <div class="uni-node" data-uni="한신대" data-week="w3" onclick="showDetails('한신대')">한신대</div>
+                        <div class="uni-node contract-uncontracted" data-uni="수원대" data-week="w1" data-contract="uncontracted" onclick="showDetails('수원대')">수원대</div>
+                        <div class="uni-node contract-uncontracted" data-uni="경기대" data-week="w2" data-contract="uncontracted" onclick="showDetails('경기대')">경기대</div>
+                    </div>
+                </div>
+                <div class="outside-region chungcheong">
+                    <div class="outside-region-label">충청권</div>
+                    <div class="outside-node-list">
+                        <div class="uni-node" data-uni="한국전통문화대" data-week="tbd" onclick="showDetails('한국전통문화대')">한국전통문화대</div>
+                        <div class="uni-node contract-uncontracted" data-uni="한국기술교육대" data-week="w1" data-contract="uncontracted" onclick="showDetails('한국기술교육대')">한국기술교육대</div>
+                        <div class="uni-node contract-uncontracted" data-uni="고려대(세종)" data-week="w2" data-contract="uncontracted" onclick="showDetails('고려대(세종)')">고려대(세종)</div>
+                    </div>
+                </div>
+                <div class="outside-region gyeongsang">
+                    <div class="outside-region-label">경상권</div>
+                    <div class="outside-node-list">
+                        <div class="uni-node" data-uni="부산대" data-week="w2" onclick="showDetails('부산대')">부산대</div>
+                        <div class="uni-node contract-uncontracted" data-uni="경북대" data-week="w2" data-contract="uncontracted" onclick="showDetails('경북대')">경북대</div>
+                    </div>
+                </div>
+        </div>
+        </div>
+    </div>
+    </div>
+
+
+    <div class="uncontracted-section">
+        <div class="uncontracted-header">
+            <h3>미계약 학교 일정표 참고 분류</h3>
+            <div class="uncontracted-note">PDF 일정표 기준 / 담당자 배정과 분리 표시</div>
+        </div>
+        <div class="uncontracted-grid">
+            <div class="uncontracted-card">
+                <h4>서울권 미계약 학교</h4>
+                <div class="uncontracted-school-list">
+                    <button class="uncontracted-school-btn active" type="button" onclick="selectUncontractedSchool('연세대(서울)', this)">연세대(서울)</button>
+                    <button class="uncontracted-school-btn" type="button" onclick="selectUncontractedSchool('서경대', this)">서경대</button>
+                    <button class="uncontracted-school-btn" type="button" onclick="selectUncontractedSchool('서강대', this)">서강대</button>
+                    <button class="uncontracted-school-btn" type="button" onclick="selectUncontractedSchool('성균관대', this)">성균관대</button>
+                </div>
+            </div>
+            <div class="uncontracted-card">
+                <h4>서울 외/기타 미계약 학교</h4>
+                <div class="uncontracted-school-list">
+                    <button class="uncontracted-school-btn" type="button" onclick="selectUncontractedSchool('연세대(미래)', this)">연세대(미래)</button>
+                    <button class="uncontracted-school-btn" type="button" onclick="selectUncontractedSchool('한국항공대', this)">한국항공대</button>
+                    <button class="uncontracted-school-btn" type="button" onclick="selectUncontractedSchool('수원대', this)">수원대</button>
+                    <button class="uncontracted-school-btn" type="button" onclick="selectUncontractedSchool('한국공학대', this)">한국공학대</button>
+                    <button class="uncontracted-school-btn" type="button" onclick="selectUncontractedSchool('한국기술교육대', this)">한국기술교육대</button>
+                    <button class="uncontracted-school-btn" type="button" onclick="selectUncontractedSchool('경기대', this)">경기대</button>
+                    <button class="uncontracted-school-btn" type="button" onclick="selectUncontractedSchool('경북대', this)">경북대</button>
+                    <button class="uncontracted-school-btn" type="button" onclick="selectUncontractedSchool('고려대(세종)', this)">고려대(세종)</button>
+                </div>
+            </div>
+        </div>
+        <div class="uncontracted-detail-panel">
+            <h4 class="uncontracted-detail-title" id="uncontractedDetailTitle">연세대(서울) 세부 일정</h4>
+            <div class="uncontracted-detail-body" id="uncontractedDetailBody"></div>
+        </div>
+    </div>
+    <div class="team-settings-container">
+        <div class="team-settings-header">
+            <h3>팀별 담당 학교 설정</h3>
+            <div class="auto-save-badge">실시간 연동 중</div>
+        </div>
+        
+        <div class="teams-grid" id="teamsForm">
+            <div class="team-card t1">
+                <h4 style="color: #e67e22;">1팀</h4>
+                <div class="member-row"><span class="role-label">팀장</span><input type="text" class="name-input" value="곽봉균"><div class="custom-select"><div class="select-display" onclick="toggleDropdown(this)">대학 선택</div><div class="select-dropdown" data-default="강남대,덕성여대,숙명여대,을지대"></div></div><button class="mini-view-btn" onclick="triggerManagerFilter(this)">보기</button></div>
+                <div class="member-row"><span class="role-label">과장</span><input type="text" class="name-input" value="이동철"><div class="custom-select"><div class="select-display" onclick="toggleDropdown(this)">대학 선택</div><div class="select-dropdown" data-default="중앙대"></div></div><button class="mini-view-btn" onclick="triggerManagerFilter(this)">보기</button></div>
+                <div class="member-row"><span class="role-label">대리</span><input type="text" class="name-input" value="조윤섭"><div class="custom-select"><div class="select-display" onclick="toggleDropdown(this)">대학 선택</div><div class="select-dropdown" data-default="건국대"></div></div><button class="mini-view-btn" onclick="triggerManagerFilter(this)">보기</button></div>
+                <div class="member-row"><span class="role-label">대리</span><input type="text" class="name-input" value="김진아"><div class="custom-select"><div class="select-display" onclick="toggleDropdown(this)">대학 선택</div><div class="select-dropdown" data-default="가톨릭대,가톨릭의대,경희대(국제)"></div></div><button class="mini-view-btn" onclick="triggerManagerFilter(this)">보기</button></div>
+                <div class="member-row"><span class="role-label">사원</span><input type="text" class="name-input" value="박종훈"><div class="custom-select"><div class="select-display" onclick="toggleDropdown(this)">대학 선택</div><div class="select-dropdown" data-default="동덕여대"></div></div><button class="mini-view-btn" onclick="triggerManagerFilter(this)">보기</button></div>
+            </div>
+            
+            <div class="team-card t2">
+                <h4 style="color: #16a085;">2팀</h4>
+                <div class="member-row"><span class="role-label">팀장</span><input type="text" class="name-input" value="김태원"><div class="custom-select"><div class="select-display" onclick="toggleDropdown(this)">대학 선택</div><div class="select-dropdown" data-default="숭실대,이화여대,인하대,한국전통문화대"></div></div><button class="mini-view-btn" onclick="triggerManagerFilter(this)">보기</button></div>
+                <div class="member-row"><span class="role-label">과장</span><input type="text" class="name-input" value="전운"><div class="custom-select"><div class="select-display" onclick="toggleDropdown(this)">대학 선택</div><div class="select-dropdown" data-default="고려대,상명대"></div></div><button class="mini-view-btn" onclick="triggerManagerFilter(this)">보기</button></div>
+                <div class="member-row"><span class="role-label">대리</span><input type="text" class="name-input" value="이효정"><div class="custom-select"><div class="select-display" onclick="toggleDropdown(this)">대학 선택</div><div class="select-dropdown" data-default="세종대,홍익대"></div></div><button class="mini-view-btn" onclick="triggerManagerFilter(this)">보기</button></div>
+                <div class="member-row"><span class="role-label">주임</span><input type="text" class="name-input" value="나한별"><div class="custom-select"><div class="select-display" onclick="toggleDropdown(this)">대학 선택</div><div class="select-dropdown" data-default="단국대,부산대,성신여대"></div></div><button class="mini-view-btn" onclick="triggerManagerFilter(this)">보기</button></div>
+                <div class="member-row"><span class="role-label">사원</span><input type="text" class="name-input" value="곽기욱"><div class="custom-select"><div class="select-display" onclick="toggleDropdown(this)">대학 선택</div><div class="select-dropdown" data-default="한신대"></div></div><button class="mini-view-btn" onclick="triggerManagerFilter(this)">보기</button></div>
+            </div>
+
+            <div class="team-card t3">
+                <h4 style="color: #e84393;">3팀</h4>
+                <div class="member-row"><span class="role-label">팀장</span><input type="text" class="name-input" value="안영훈"><div class="custom-select"><div class="select-display" onclick="toggleDropdown(this)">대학 선택</div><div class="select-dropdown" data-default="국민대,아주대,한국외대"></div></div><button class="mini-view-btn" onclick="triggerManagerFilter(this)">보기</button></div>
+                <div class="member-row"><span class="role-label">과장</span><input type="text" class="name-input" value="고은애"><div class="custom-select"><div class="select-display" onclick="toggleDropdown(this)">대학 선택</div><div class="select-dropdown" data-default="서울과기대,서울시립대"></div></div><button class="mini-view-btn" onclick="triggerManagerFilter(this)">보기</button></div>
+                <div class="member-row"><span class="role-label">대리</span><input type="text" class="name-input" value="이루다"><div class="custom-select"><div class="select-display" onclick="toggleDropdown(this)">대학 선택</div><div class="select-dropdown" data-default="한양대"></div></div><button class="mini-view-btn" onclick="triggerManagerFilter(this)">보기</button></div>
+                <div class="member-row"><span class="role-label">대리</span><input type="text" class="name-input" value="곽민정"><div class="custom-select"><div class="select-display" onclick="toggleDropdown(this)">대학 선택</div><div class="select-dropdown" data-default="경희대(서울)"></div></div><button class="mini-view-btn" onclick="triggerManagerFilter(this)">보기</button></div>
+                <div class="member-row"><span class="role-label">주임</span><input type="text" class="name-input" value="박상호"><div class="custom-select"><div class="select-display" onclick="toggleDropdown(this)">대학 선택</div><div class="select-dropdown" data-default="동국대"></div></div><button class="mini-view-btn" onclick="triggerManagerFilter(this)">보기</button></div>
+            </div>
+            
+            <div class="team-card t4">
+                <h4 style="color: #2980b9;">경영관리</h4>
+                <div class="member-row"><span class="role-label">대리</span><input type="text" class="name-input" value="김혜인"><div class="custom-select"><div class="select-display" onclick="toggleDropdown(this)">대학 선택</div><div class="select-dropdown" data-default="광운대"></div></div><button class="mini-view-btn" onclick="triggerManagerFilter(this)">보기</button></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="node-tooltip" id="nodeTooltip"></div>
+
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <span class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</span>
+        <h3 class="modal-title" id="modalTitle">대학명</h3>
+        <div class="modal-manager-info" id="modalManager">담당자 미배정</div>
+        <div class="modal-body" id="modalBody"></div>
+    </div>
+</div>
+
+<script>
+    let currentFilterType = 'all';
+    let currentFilterValue = 'all';
+    
+    // 다중 선택된 담당자 이름을 저장하는 배열 (토글용)
+    let selectedManagers = [];
+
+    const pendingUnis = ["연세대(서울)", "서강대", "성균관대", "서경대"];
+    
+    const allUnis = [
+        "가톨릭대", "가톨릭의대", "강남대", "건국대", "경희대(국제)", "경희대(서울)", "고려대", "광운대", 
+        "국민대", "단국대", "덕성여대", "동국대", "동덕여대", "부산대", "상명대", 
+        "서울과기대", "서울시립대", "성신여대", "세종대", "숙명여대", "숭실대", "아주대", 
+        "을지대", "이화여대", "인하대", "중앙대", "한국외대", "한국전통문화대", "한신대", 
+        "한양대", "홍익대", "연세대(서울)", "서강대", "성균관대", "서경대"
+    ];
+
+    const scheduleData = {
+        "홍익대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>10.3 (토)</span>자연계열/캠퍼스자율전공(자연, 예능)</div><div class='schedule-item THEME_CLASS'><span class='schedule-date'>10.4 (일)</span>인문계열/예술학과/캠퍼스자율전공(인문, 예능)</div>",
+        "성신여대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>10.3 (토)</span>자연계</div><div class='schedule-item THEME_CLASS'><span class='schedule-date'>10.4 (일)</span>인문계</div>",
+        "서울시립대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>10.3 (토)</span>10:00 전 모집 단위</div>",
+        "가톨릭대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>10.11 (일)</span>10:00 자연공학계열, 간호학과<br>15:00 인문사회계열</div>",
+        "가톨릭의대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.22 (일)</span>10:00 약학과, 의예과</div>",
+        "상명대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>10.31 (토)</span>자연계열(애니메이션 전공 포함)</div>",
+        "경희대(서울)": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.21 (토)</span>09:00 서울캠 문과대학, 생활과학대학(식품영양학과 제외)</div>",
+        "경희대(국제)": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.21 (토) / 11.22 (일)</span>국제캠퍼스 일정표 참고</div>",
+        "건국대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.21 (토)</span>09:30 인문, 통합<br>14:00 자연</div>",
+        "숙명여대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.21 (토)</span>인문계, 의류학과, 자연계</div><div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.22 (일)</span>인문계, 의류학과</div>",
+        "고려대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.21 (토)</span>08:30, 12:30 자연계</div><div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.22 (일)</span>08:30 경영학과, 국어국문학과 등<br>12:30 경제학과, 교육학과 등</div>",
+        "숭실대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.21 (토)</span>09:30 자연계열<br>15:00 인문계열, 경상계열</div>",
+        "동국대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.22 (일)</span>09:30 자연계열<br>13:00 인문계열1<br>16:30 인문계열2</div>",
+        "한양대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.28 (토)</span>09:30 정보시스템, 정책 등<br>13:30 국문, 사학 등<br>17:00 정치외교, 미디어 등</div><div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.29 (일)</span>09:30 건축, 건설환경 등<br>13:30 기계, 화학 등<br>17:00 융합전자, 컴퓨터, 의예 등</div>",
+        "이화여대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.28 (토)</span>08:30 국어국문, 사학 등<br>14:20 정치외교, 행정, 경제 등</div><div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.29 (일)</span>08:30 자연1<br>14:20 자연2</div>",
+        "한국외대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.28 (토)</span>10:00 [서울] 영어대학 등<br>15:00 [서울] 사회과학대학 등</div><div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.29 (일)</span>10:00 [서울] 아시아언어문화대학 등<br>15:00 [서울] 경영대학, 국제학부 등</div>",
+        "세종대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.28 (토)</span>09:00 인문계열 전체<br>14:00 자유전공학부</div><div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.29 (일)</span>09:00 인공지능융합대학<br>14:00 자연계열(인공지능 제외)</div>",
+        "광운대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.28 (토)</span>자연계열</div><div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.29 (일)</span>인문계열</div>",
+        "동덕여대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.28 (토)</span>추후 공지 예정(11/25)</div>",
+        "덕성여대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.29 (일)</span>전 계열</div>",
+        "중앙대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.28 (토)</span>10:00 자연과학/공과 등<br>14:00 창의ICT/의과대학 등</div><div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.29 (일)</span>10:00 경영경제대학<br>14:00 인문/사회과학/사범대학 등</div>",
+        "국민대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>12.5 (토)</span>인문계열</div><div class='schedule-item THEME_CLASS'><span class='schedule-date'>12.6 (일)</span>자연계열</div>",
+        "서울과기대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.23 (월) 예정</span>시간 추후 공지</div>",
+        "강남대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.29 (일)</span>10:00 인문사회계<br>14:00 공학계, 자유전공학부</div>",
+        "단국대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>10.17 (토) / 10.18 (일)</span>전 모집단위, 자연계열</div>",
+        "부산대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.28 (토)</span>09:00 자연계<br>15:00 인문/사회계</div>",
+        "아주대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.29 (일)</span>09:00 공과대학, 자연과학대학, 자유전공학부(자연)<br>14:00 첨단ICT융합대학, 소프트웨어융합대학<br>19:00 의과대학</div><div class='schedule-item THEME_CLASS'><span class='schedule-date'>12.6 (일)</span>09:00 경영대학, 인문대학, 사회과학대학, 자유전공학부(인문)<br>14:00 약학대학</div>",
+        "을지대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>일정 확인 필요</span>일정표 원본 참고</div>",
+        "인하대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>12.5 (토)</span>인문계열</div><div class='schedule-item THEME_CLASS'><span class='schedule-date'>12.6 (일)</span>자연계열</div>",
+        "한국전통문화대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>일정 확인 필요</span>일정표 원본 참고</div>",
+        "한신대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>12.5 (토)</span>10:00 인문계열<br>14:30 자연계열</div>",
+        "연세대(서울)": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>10.10 (토)</span>10:00 인문계<br>10:30 자연/통합계열</div>",
+        "서경대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.1 (일)</span>전 모집단위</div>",
+        "서강대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.21 (토)</span>15:30 수학과, 전자공학과, 기계공학과, 인공지능학과<br>18:30 물리학과, 화공생명공학과, 컴퓨터공학과, 시스템반도체공학과</div><div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.22 (일)</span>15:30 인문학부, 영문학부, 사회과학부, 지식융합미디어학부<br>19:00 경제학과, 경영학부</div>",
+        "성균관대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.21 (토)</span>자연계열<br>08:30 자유전공계열, 글로벌경제학과, 글로벌리더학부, 사회과학계열, 건설환경공학부, 공학계열, 전자전기정보공학부<br>13:00 인문과학계열, 경영학과, 글로벌경영학과, 글로벌AI융합학부, 자연과학계열, 컴퓨터공학과</div><div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.22 (일)</span>08:30 건설환경공학부, 경영학과 등<br>13:00 공학계열, 자연과학계열<br>17:00 글로벌경영학과, 글로벌경제학과, 글로벌리더학부, 약학과, 의예과, 자유전공계열</div>",    };
+
+    const uncontractedScheduleData = {
+        "연세대(미래)": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>10.11 (일)</span>15:00 인문사회계열</div>",
+        "한국항공대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.21 (토)</span>10:00 공과대학, AI융합대학, 자유전공학부(공학적성)<br>15:00 항공ㆍ경영대학(이학적성), 항공ㆍ경영대학(사회적성), 항공운항학과, 자유전공학부</div>",
+        "수원대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.21 (토) / 11.22 (일)</span>자연계열, 인문계열</div>",
+        "한국공학대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.22 (일)</span>10:00 AI융합 자율전공, 경영 자율전공, 자유전공학부<br>14:30 IT반도체융합 자율전공, 스마트기계융합 자율전공, 첨단융합 자율전공</div>",
+        "한국기술교육대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.25 (수)</span>10:00 공학융합계열<br>14:00 ICT융합계열, 사회융합계열</div>",
+        "경기대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.27 (금)</span>전 모집 단위</div>",
+        "경북대": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.28 (토)</span>09:00 인문계열<br>15:00 자연계열1<br>16:00 자연계열2</div>",
+        "고려대(세종)": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.28 (토)</span>09:40 전 모집단위(약학과 제외)<br>14:30 약학과</div>"
+    };
+
+    function initDropdowns() {
+        document.querySelectorAll('.select-dropdown').forEach(dropdown => {
+            const defaults = (dropdown.dataset.default || "").split(',');
+            
+            allUnis.forEach(uni => {
+                const label = document.createElement('label');
+                const isChecked = defaults.includes(uni) ? "checked" : "";
+                const isPending = pendingUnis.includes(uni); 
+                
+                label.innerHTML = `<input type="checkbox" value="${uni}" ${isChecked}> <span class="${isPending ? 'text-gray' : ''}">${uni}</span>`;
+                
+                label.querySelector('input').addEventListener('change', function() {
+                    updateDisplay(dropdown.parentElement);
+                    applyTeamSettings(); 
+                });
+                dropdown.appendChild(label);
+            });
+            updateDisplay(dropdown.parentElement);
+        });
+
+        document.querySelectorAll('.name-input').forEach(input => {
+            input.addEventListener('input', applyTeamSettings);
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.custom-select')) {
+                document.querySelectorAll('.select-dropdown').forEach(d => d.classList.remove('show'));
+            }
+        });
+    }
+
+    function updateDisplay(selectContainer) {
+        const checked = Array.from(selectContainer.querySelectorAll('input:checked')).map(cb => cb.value);
+        const displayBox = selectContainer.querySelector('.select-display');
+        
+        if (checked.length === 0) {
+            displayBox.innerHTML = "대학 선택";
+        } else {
+            displayBox.innerHTML = checked.map(val => {
+                return pendingUnis.includes(val) ? `<span class="text-gray">${val}</span>` : `<span>${val}</span>`;
+            }).join(', ');
+        }
+    }
+
+    function toggleDropdown(element) {
+        document.querySelectorAll('.select-dropdown').forEach(d => {
+            if (d !== element.nextElementSibling) d.classList.remove('show');
+        });
+        element.nextElementSibling.classList.toggle('show');
+    }
+
+    // 담당자 다중 선택/해제 (토글 기능)
+    function triggerManagerFilter(btn) {
+        const row = btn.closest('.member-row');
+        const name = row.querySelector('.name-input').value.trim();
+        if(!name) return alert("담당자 이름을 입력해주세요.");
+
+        // 버튼 상태 토글
+        btn.classList.toggle('active-mini');
+
+        // 배열에 추가 또는 제거
+        if (btn.classList.contains('active-mini')) {
+            if (!selectedManagers.includes(name)) selectedManagers.push(name);
+        } else {
+            selectedManagers = selectedManagers.filter(m => m !== name);
+        }
+
+        // 상단 그룹 필터 비활성화 처리
+        document.querySelectorAll('.filter-btn').forEach(b => b.className = 'filter-btn');
+
+        if (selectedManagers.length === 0) {
+            // 아무도 선택되지 않았을 경우 '전체 보기'로 돌아감
+            currentFilterType = 'all';
+            currentFilterValue = 'all';
+            document.getElementById('btn-all-all').classList.add('active-all');
+        } else {
+            currentFilterType = 'manager';
+        }
+
+        renderMap();
+    }
+
+    function applyTeamSettings() {
+        document.querySelectorAll('.uni-node').forEach(node => {
+            delete node.dataset.team;
+            delete node.dataset.managerName;
+            delete node.dataset.managerInfo;
+            node.classList.remove('bg-team-t1', 'bg-team-t2', 'bg-team-t3', 'bg-team-t4');
+        });
+
+        const teams = ['t1', 't2', 't3', 't4'];
+        
+        teams.forEach(teamId => {
+            const teamCard = document.querySelector(`.team-card.${teamId}`);
+            if(!teamCard) return;
+
+            const rows = teamCard.querySelectorAll('.member-row');
+            let teamName = '';
+            if (teamId === 't1') teamName = '1팀';
+            else if (teamId === 't2') teamName = '2팀';
+            else if (teamId === 't3') teamName = '3팀';
+            else if (teamId === 't4') teamName = '경영관리부';
+            
+            rows.forEach(row => {
+                const role = row.querySelector('.role-label').innerText;
+                const name = row.querySelector('.name-input').value.trim();
+                const checkedInputs = Array.from(row.querySelectorAll('.select-dropdown input:checked'));
+                
+                checkedInputs.forEach(input => {
+                    const uni = input.value;
+                    const nodes = document.querySelectorAll(`.uni-node[data-uni="${uni}"]`);
+                    nodes.forEach(node => {
+                        node.dataset.team = teamId;
+                        node.dataset.managerName = name || "이름미상";
+                        node.dataset.managerInfo = `${teamName} ${role} (${name || "이름미상"})`;
+                        node.classList.add(`bg-team-${teamId}`); 
+                    });
+                });
+            });
+        });
+        
+        // 담당자 이름이 변경되었을 수 있으므로 active 버튼 기반으로 selectedManagers 재정렬
+        if (currentFilterType === 'manager') {
+            selectedManagers = [];
+            document.querySelectorAll('.mini-view-btn.active-mini').forEach(btn => {
+                const name = btn.closest('.member-row').querySelector('.name-input').value.trim();
+                if(name) selectedManagers.push(name);
+            });
+            if (selectedManagers.length === 0) {
+                currentFilterType = 'all';
+                currentFilterValue = 'all';
+                document.getElementById('btn-all-all').classList.add('active-all');
+            }
+        }
+
+        renderMap();
+    }
+
+    // 상단 (전체/일정/팀) 필터 클릭 처리
+    function filterMap(type, value) {
+        currentFilterType = type;
+        currentFilterValue = value;
+        selectedManagers = []; // 상단 필터를 누르면 개인 담당자 선택은 모두 해제됨
+
+        // 상단 버튼 활성화
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.className = 'filter-btn');
+        const clickedBtn = document.getElementById(`btn-${type}-${value}`);
+        if(clickedBtn) clickedBtn.classList.add(`active-${value}`);
+
+        // 하단 [보기] 버튼 초기화
+        document.querySelectorAll('.mini-view-btn').forEach(btn => btn.classList.remove('active-mini'));
+
+        renderMap();
+    }
+
+    // 지도 UI 실제 렌더링 로직
+    function renderMap() {
+        document.querySelectorAll('.uni-node').forEach(el => {
+            el.classList.remove('dimmed'); 
+            
+            const nodeWeek = el.dataset.week;
+            const nodeTeam = el.dataset.team;
+            const nodeManager = el.dataset.managerName;
+            const nodeContract = el.dataset.contract || "contracted";
+
+            if (currentFilterType === 'week') {
+                if (nodeWeek !== currentFilterValue) el.classList.add('dimmed');
+            } else if (currentFilterType === 'team') {
+                if (nodeTeam !== currentFilterValue) el.classList.add('dimmed');
+            } else if (currentFilterType === 'contract') {
+                if (nodeContract !== currentFilterValue) el.classList.add('dimmed');
+            } else if (currentFilterType === 'manager') {
+                // 배열(선택된 담당자들)에 현재 마커의 담당자가 포함되어있지 않으면 가림
+                if (!selectedManagers.includes(nodeManager)) el.classList.add('dimmed');
+            }
+        });
+    }
+
+    function getWeekLabel(weekVal) {
+        if (weekVal === 'pre') return '수능 이전';
+        if (weekVal === 'w1') return '1주차';
+        if (weekVal === 'w2') return '2주차';
+        if (weekVal === 'w3') return '3주차';
+        return '일정 확인';
+    }
+
+    function getNodeTooltipText(node) {
+        const uniName = node.dataset.uni || node.textContent.trim();
+        const weekText = getWeekLabel(node.dataset.week);
+        const managerInfo = node.dataset.managerInfo;
+        let statusText = '담당자 미배정';
+
+        if (managerInfo) {
+            statusText = '담당: ' + managerInfo;
+        } else if (node.dataset.contract === 'uncontracted') {
+            statusText = '미계약 / 담당자 미배정';
+        }
+
+        return `${uniName}\n${weekText}\n${statusText}`;
+    }
+
+    function moveNodeTooltip(event) {
+        const tooltip = document.getElementById('nodeTooltip');
+        if (!tooltip || tooltip.style.display !== 'block') return;
+
+        const margin = 12;
+        let left = event.clientX + 14;
+        let top = event.clientY + 14;
+
+        if (left + tooltip.offsetWidth + margin > window.innerWidth) {
+            left = event.clientX - tooltip.offsetWidth - 14;
+        }
+        if (top + tooltip.offsetHeight + margin > window.innerHeight) {
+            top = event.clientY - tooltip.offsetHeight - 14;
+        }
+
+        tooltip.style.left = Math.max(margin, left) + 'px';
+        tooltip.style.top = Math.max(margin, top) + 'px';
+    }
+
+    function initNodeTooltips() {
+        const tooltip = document.getElementById('nodeTooltip');
+        if (!tooltip) return;
+
+        document.addEventListener('mouseover', function(event) {
+            const node = event.target.closest('.uni-node');
+            if (!node) return;
+
+            tooltip.textContent = getNodeTooltipText(node);
+            tooltip.style.display = 'block';
+            moveNodeTooltip(event);
+        });
+
+        document.addEventListener('mousemove', function(event) {
+            if (event.target.closest('.uni-node')) {
+                moveNodeTooltip(event);
+            }
+        });
+
+        document.addEventListener('mouseout', function(event) {
+            if (event.target.closest('.uni-node')) {
+                tooltip.style.display = 'none';
+            }
+        });
+    }
+
+    function showDetails(uniName) {
+        const node = document.querySelector(`.uni-node[data-uni="${uniName}"]`);
+        const titleEl = document.getElementById('modalTitle');
+        const managerEl = document.getElementById('modalManager');
+        
+        const weekVal = node.dataset.week;
+        const teamVal = node.dataset.team;
+
+        titleEl.innerText = uniName + " 세부 일정";
+        titleEl.className = 'modal-title';
+        if (weekVal) titleEl.classList.add(`theme-week-${weekVal}`);
+        
+        managerEl.className = 'modal-manager-info';
+        if (teamVal) {
+            managerEl.innerText = "담당자: " + node.dataset.managerInfo;
+            managerEl.classList.add(`bg-team-${teamVal}`);
+        } else {
+            managerEl.innerText = "담당자 미배정";
+            managerEl.style.backgroundColor = "#95a5a6";
+        }
+        
+        let rawHtml = scheduleData[uniName] || uncontractedScheduleData[uniName] || "<div class='schedule-item'>일정 정보가 없습니다.</div>";
+        const themeClass = weekVal ? `border-week-${weekVal}` : '';
+        document.getElementById('modalBody').innerHTML = rawHtml.replace(/THEME_CLASS/g, themeClass);
+            
+        document.getElementById('modalOverlay').style.display = 'flex';
+    }
+
+    function selectUncontractedSchool(uniName, button) {
+        document.querySelectorAll('.uncontracted-school-btn').forEach(btn => btn.classList.remove('active'));
+        const activeButton = button || Array.from(document.querySelectorAll('.uncontracted-school-btn')).find(btn => btn.textContent.trim() === uniName);
+        if (activeButton) activeButton.classList.add('active');
+
+        const titleEl = document.getElementById('uncontractedDetailTitle');
+        const bodyEl = document.getElementById('uncontractedDetailBody');
+        if (!titleEl || !bodyEl) return;
+
+        const node = document.querySelector(`.uni-node[data-uni="${uniName}"]`);
+        const weekVal = node ? node.dataset.week : 'tbd';
+        const themeClass = `border-week-${weekVal}`;
+        const rawHtml = uncontractedScheduleData[uniName] || scheduleData[uniName] || "<div class='schedule-item THEME_CLASS'>일정 정보가 없습니다.</div>";
+
+        titleEl.innerText = uniName + " 세부 일정";
+        bodyEl.innerHTML = rawHtml.replace(/THEME_CLASS/g, themeClass);
+    }
+
+    function getNodesByUni(uniName) {
+        return Array.from(document.querySelectorAll('.uni-node')).filter(node => node.dataset.uni === uniName);
+    }
+
+    function getTeamLabel(teamId) {
+        if (teamId === 't1') return '1팀';
+        if (teamId === 't2') return '2팀';
+        if (teamId === 't3') return '3팀';
+        if (teamId === 't4') return '경영관리';
+        return '';
+    }
+
+    function getExportRegion(uniName, nodes) {
+        const node = nodes[0];
+        if (node && node.closest('.map-canvas')) return '서울권';
+
+        if (node) {
+            const region = node.closest('.outside-region');
+            const label = region ? region.querySelector('.outside-region-label') : null;
+            if (label) return label.textContent.trim();
+        }
+
+        const button = Array.from(document.querySelectorAll('.uncontracted-school-btn')).find(btn => btn.textContent.trim() === uniName);
+        const cardTitle = button && button.closest('.uncontracted-card') ? button.closest('.uncontracted-card').querySelector('h4') : null;
+        return cardTitle ? cardTitle.textContent.trim() : '기타';
+    }
+
+    function htmlToExportText(html) {
+        const temp = document.createElement('div');
+        const normalized = (html || '')
+            .replace(/THEME_CLASS/g, '')
+            .replace(/<\/span>/gi, ' : </span>')
+            .replace(/<br\s*\/?>/gi, '\n')
+            .replace(/<\/div>\s*<div/gi, '</div>\n<div');
+
+        temp.innerHTML = normalized;
+        return temp.textContent
+            .replace(/\u00a0/g, ' ')
+            .replace(/[ \t]+\n/g, '\n')
+            .replace(/\n[ \t]+/g, '\n')
+            .replace(/[ \t]{2,}/g, ' ')
+            .trim();
+    }
+
+    function escapeExcelCell(value) {
+        return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;')
+            .replace(/\n/g, '<br>');
+    }
+
+    function collectExportRows() {
+        applyTeamSettings();
+
+        const uniNames = new Set();
+        document.querySelectorAll('.uni-node').forEach(node => {
+            if (node.dataset.uni) uniNames.add(node.dataset.uni);
+        });
+        document.querySelectorAll('.uncontracted-school-btn').forEach(button => uniNames.add(button.textContent.trim()));
+        allUnis.forEach(uni => uniNames.add(uni));
+        Object.keys(scheduleData).forEach(uni => uniNames.add(uni));
+        Object.keys(uncontractedScheduleData).forEach(uni => uniNames.add(uni));
+
+        return Array.from(uniNames).map(uniName => {
+            const nodes = getNodesByUni(uniName);
+            const assignedNode = nodes.find(node => node.dataset.managerName || node.dataset.team) || nodes[0];
+            const weekValues = Array.from(new Set(nodes.map(node => node.dataset.week).filter(Boolean)));
+            const weekText = weekValues.length ? weekValues.map(getWeekLabel).join(', ') : '일정 확인';
+            const rawSchedule = scheduleData[uniName] || uncontractedScheduleData[uniName] || '';
+            const isUncontracted = nodes.some(node => node.dataset.contract === 'uncontracted') || pendingUnis.includes(uniName) || (!!uncontractedScheduleData[uniName] && !scheduleData[uniName]);
+
+            return {
+                university: uniName,
+                region: getExportRegion(uniName, nodes),
+                week: uniName === '연세대(미래)' && weekText === '일정 확인' ? '수능 이전' : weekText,
+                schedule: htmlToExportText(rawSchedule),
+                team: assignedNode ? getTeamLabel(assignedNode.dataset.team) : '',
+                manager: assignedNode ? (assignedNode.dataset.managerName || '') : '',
+                managerInfo: assignedNode ? (assignedNode.dataset.managerInfo || '') : '',
+                contract: isUncontracted ? '미계약' : '계약'
+            };
+        });
+    }
+
+    function downloadExcel() {
+        const headers = ['대학', '권역', '수시논술주차', '일정', '팀', '담당자명', '담당정보', '계약여부'];
+        const rows = collectExportRows();
+        const tableRows = rows.map(row => {
+            const cells = [
+                row.university,
+                row.region,
+                row.week,
+                row.schedule,
+                row.team,
+                row.manager,
+                row.managerInfo,
+                row.contract
+            ].map(value => `<td>${escapeExcelCell(value)}</td>`).join('');
+
+            return `<tr>${cells}</tr>`;
+        }).join('');
+
+        const headerRow = headers.map(header => `<th>${escapeExcelCell(header)}</th>`).join('');
+        const workbookHtml = `
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    table { border-collapse: collapse; }
+                    th, td { border: 1px solid #999; padding: 6px; mso-number-format: "\\@"; vertical-align: top; white-space: normal; }
+                    th { background: #eef3f8; font-weight: bold; }
+                </style>
+            </head>
+            <body>
+                <table>
+                    <thead><tr>${headerRow}</tr></thead>
+                    <tbody>${tableRows}</tbody>
+                </table>
+            </body>
+            </html>`;
+
+        const blob = new Blob(['\ufeff', workbookHtml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+        const link = document.createElement('a');
+        const today = new Date().toISOString().slice(0, 10);
+        link.href = URL.createObjectURL(blob);
+        link.download = `논술_주차_담당자_전체데이터_${today}.xls`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+    }
+
+    function clearSelections() {
+        currentFilterType = 'all';
+        currentFilterValue = 'all';
+        selectedManagers = [];
+
+        document.querySelectorAll('.select-dropdown').forEach(dropdown => dropdown.classList.remove('show'));
+        document.querySelectorAll('.mini-view-btn').forEach(btn => btn.classList.remove('active-mini'));
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.className = 'filter-btn');
+        document.querySelectorAll('.uncontracted-school-btn').forEach(btn => btn.classList.remove('active'));
+
+        const allButton = document.getElementById('btn-all-all');
+        if (allButton) allButton.classList.add('active-all');
+
+        const modal = document.getElementById('modalOverlay');
+        if (modal) modal.style.display = 'none';
+        const tooltip = document.getElementById('nodeTooltip');
+        if (tooltip) tooltip.style.display = 'none';
+
+        const detailTitle = document.getElementById('uncontractedDetailTitle');
+        const detailBody = document.getElementById('uncontractedDetailBody');
+        if (detailTitle) detailTitle.innerText = '선택된 미계약 학교 없음';
+        if (detailBody) detailBody.innerHTML = '';
+
+        renderMap();
+    }
+
+    function closeModal(event) {
+        if(event.target.id === 'modalOverlay') {
+            document.getElementById('modalOverlay').style.display = 'none';
+        }
+    }
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            clearSelections();
+        }
+    });
+
+    window.onload = function() {
+        initDropdowns();
+        initNodeTooltips();
+        applyTeamSettings();
+        selectUncontractedSchool('연세대(서울)', document.querySelector('.uncontracted-school-btn.active'));
+    };
+</script>
+
+</body>
+</html>
