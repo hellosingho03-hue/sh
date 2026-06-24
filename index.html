@@ -305,6 +305,11 @@
         .settings-table td { padding: 8px 12px; border-bottom: 1px solid var(--line-soft); background: #fff; vertical-align: middle; }
         .settings-table tr:last-child td { border-bottom: 0; }
         .settings-table select { width: 100%; min-width: 118px; height: 32px; border: 1px solid #cbd5df; border-radius: 6px; background: #fff; color: #26323f; font-weight: 800; }
+        .settings-sort-btn { width: 100%; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .settings-sort-btn:hover { color: #182230; }
+        .settings-sort-btn.active { color: #182230; }
+        .settings-sort-indicator { min-width: 18px; color: #8a96a3; font-size: 11px; text-align: right; }
+        .settings-sort-btn.active .settings-sort-indicator { color: #182230; }
         .schedule-item { margin-bottom: 15px; background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 5px solid #bdc3c7; }
         .schedule-date { font-weight: bold; margin-bottom: 5px; display: block; font-size: 16px; color: #2c3e50; }
 
@@ -632,10 +637,10 @@
             <table class="settings-table">
                 <thead>
                     <tr>
-                        <th>대학</th>
-                        <th>권역</th>
-                        <th>주차</th>
-                        <th>계약여부</th>
+                        <th><button class="settings-sort-btn" id="settingsSortUniversityBtn" type="button" onclick="sortSettingsBy('university')" title="대학명 기준 정렬">대학 <span class="settings-sort-indicator" id="settingsSortUniversity">-</span></button></th>
+                        <th><button class="settings-sort-btn" id="settingsSortRegionBtn" type="button" onclick="sortSettingsBy('region')" title="권역 기준 정렬">권역 <span class="settings-sort-indicator" id="settingsSortRegion">-</span></button></th>
+                        <th><button class="settings-sort-btn" id="settingsSortWeekBtn" type="button" onclick="sortSettingsBy('week')" title="주차 기준 정렬">주차 <span class="settings-sort-indicator" id="settingsSortWeek">-</span></button></th>
+                        <th><button class="settings-sort-btn" id="settingsSortContractBtn" type="button" onclick="sortSettingsBy('contract')" title="계약여부 기준 정렬">계약여부 <span class="settings-sort-indicator" id="settingsSortContract">-</span></button></th>
                     </tr>
                 </thead>
                 <tbody id="universitySettingsBody"></tbody>
@@ -651,6 +656,7 @@
     // 다중 선택된 담당자 이름을 저장하는 배열 (토글용)
     let selectedManagers = [];
     let displayMode = 'team';
+    let settingsSort = { key: 'university', direction: 'asc' };
     const universityConfig = {};
 
     const pendingUnis = ["연세대(서울)", "서강대", "성균관대", "서경대"];
@@ -1025,12 +1031,72 @@
         return '일정 확인';
     }
 
+    function sortSettingsBy(key) {
+        if (settingsSort.key === key) {
+            settingsSort.direction = settingsSort.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+            settingsSort = { key, direction: 'asc' };
+        }
+        renderSettingsModal();
+    }
+
+    function getSettingsSortValue(uniName, key) {
+        const config = ensureUniversityConfig(uniName);
+
+        if (key === 'region') return getExportRegion(uniName, getNodesByUni(uniName));
+        if (key === 'week') {
+            const weekOrder = { pre: 0, w1: 1, w2: 2, w3: 3, tbd: 4 };
+            return weekOrder[config.week] ?? 99;
+        }
+        if (key === 'contract') {
+            return config.contract === 'contracted' ? 0 : 1;
+        }
+        return uniName;
+    }
+
+    function compareSettingsRows(a, b) {
+        const key = settingsSort.key;
+        const direction = settingsSort.direction === 'desc' ? -1 : 1;
+        const aValue = getSettingsSortValue(a, key);
+        const bValue = getSettingsSortValue(b, key);
+        let result = 0;
+
+        if (typeof aValue === 'number' && typeof bValue === 'number') {
+            result = aValue - bValue;
+        } else {
+            result = String(aValue).localeCompare(String(bValue), 'ko-KR');
+        }
+
+        if (result === 0) {
+            result = a.localeCompare(b, 'ko-KR');
+        }
+        return result * direction;
+    }
+
+    function updateSettingsSortIndicators() {
+        const map = {
+            university: ['settingsSortUniversityBtn', 'settingsSortUniversity'],
+            region: ['settingsSortRegionBtn', 'settingsSortRegion'],
+            week: ['settingsSortWeekBtn', 'settingsSortWeek'],
+            contract: ['settingsSortContractBtn', 'settingsSortContract']
+        };
+
+        Object.entries(map).forEach(([key, ids]) => {
+            const btn = document.getElementById(ids[0]);
+            const indicator = document.getElementById(ids[1]);
+            const active = settingsSort.key === key;
+            if (btn) btn.classList.toggle('active', active);
+            if (indicator) indicator.textContent = active ? (settingsSort.direction === 'asc' ? '▲' : '▼') : '-';
+        });
+    }
+
     function renderSettingsModal() {
         const tbody = document.getElementById('universitySettingsBody');
         if (!tbody) return;
 
         tbody.innerHTML = '';
-        getAllUniversityNames().forEach(uniName => {
+        updateSettingsSortIndicators();
+        getAllUniversityNames().sort(compareSettingsRows).forEach(uniName => {
             const config = ensureUniversityConfig(uniName);
             const nodes = getNodesByUni(uniName);
             const row = document.createElement('tr');
