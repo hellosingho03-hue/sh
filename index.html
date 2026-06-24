@@ -279,6 +279,7 @@
         .select-dropdown { display: none; position: absolute; bottom: 100%; left: 0; width: 100%; min-width: 180px; max-height: 220px; overflow-y: auto; background: #fff; border: 1px solid #ced4da; border-radius: 7px; box-shadow: 0 -8px 20px rgba(31,42,55,0.12); z-index: 50; padding: 6px; margin-bottom: 4px; }
         .select-dropdown.show { display: block; }
         .select-dropdown label { display: block; padding: 4px 5px; font-size: 12px; cursor: pointer; }
+        .select-dropdown label.hidden-uncontracted { display: none; }
         .select-dropdown label:hover { background: #f1f3f5; }
         .select-dropdown input[type="checkbox"] { margin-right: 6px; cursor: pointer; }
 
@@ -587,6 +588,7 @@
                     <button class="view-switch-btn active" id="viewModeTeamBtn" type="button" onclick="setDisplayMode('team')">팀별보기</button>
                     <button class="view-switch-btn" id="viewModeWeekBtn" type="button" onclick="setDisplayMode('week')">주차별보기</button>
                 </div>
+                <button class="settings-action-btn" id="teamContractedOnlyBtn" type="button" onclick="toggleSettingsContractedOnly()">미계약 제외</button>
                 <button class="settings-open-btn" type="button" onclick="openSettingsModal()">설정</button>
                 <div class="auto-save-badge">실시간 연동 중</div>
             </div>
@@ -853,14 +855,18 @@
     }
 
     function updateSettingsFilterButton() {
-        const button = document.getElementById('settingsContractedOnlyBtn');
-        if (!button) return;
-        button.classList.toggle('active', settingsContractedOnly);
-        button.textContent = settingsContractedOnly ? '미계약 제외 중' : '미계약 제외';
+        ['settingsContractedOnlyBtn', 'teamContractedOnlyBtn'].forEach(id => {
+            const button = document.getElementById(id);
+            if (!button) return;
+            button.classList.toggle('active', settingsContractedOnly);
+            button.textContent = settingsContractedOnly ? '미계약 제외 중' : '미계약 제외';
+        });
     }
 
     function toggleSettingsContractedOnly() {
         settingsContractedOnly = !settingsContractedOnly;
+        refreshDropdownContractStyles();
+        renderWeekCards();
         renderSettingsModal();
     }
 
@@ -943,6 +949,7 @@
             const labelText = label.querySelector('span');
             if (!input || !labelText) return;
             labelText.classList.toggle('text-gray', isUniUncontracted(input.value));
+            label.classList.toggle('hidden-uncontracted', settingsContractedOnly && isUniUncontracted(input.value));
         });
         document.querySelectorAll('.custom-select').forEach(selectContainer => updateDisplay(selectContainer));
     }
@@ -979,7 +986,9 @@
     }
 
     function updateDisplay(selectContainer) {
-        const checked = Array.from(selectContainer.querySelectorAll('input:checked')).map(cb => cb.value);
+        const checked = Array.from(selectContainer.querySelectorAll('input:checked'))
+            .map(cb => cb.value)
+            .filter(value => !settingsContractedOnly || !isUniUncontracted(value));
         const displayBox = selectContainer.querySelector('.select-display');
         
         if (checked.length === 0) {
@@ -1423,7 +1432,7 @@
             ['w3', '3주차'],
             ['tbd', '일정 확인']
         ];
-        const uniNames = getAllUniversityNames();
+        const uniNames = getAllUniversityNames().filter(uniName => !settingsContractedOnly || !isUniUncontracted(uniName));
 
         grid.innerHTML = '';
         weekDefs.forEach(([weekValue, weekLabel]) => {
