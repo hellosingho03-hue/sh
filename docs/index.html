@@ -226,9 +226,15 @@
 
         /* 팀 배정 설정 영역 (하단) */
         .team-settings-container { background: var(--panel-bg); padding: 18px; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 0; border: 1px solid var(--line); }
-        .team-settings-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .team-settings-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 15px; }
         .team-settings-header h3 { margin: 0; color: #2c3e50; font-size: 17px; }
+        .team-header-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
         .auto-save-badge { padding: 6px 10px; background-color: #eef8f1; color: #2e7d32; border: 1px solid #cfe9d5; border-radius: 7px; font-weight: bold; font-size: 12px; display: flex; align-items: center; gap: 5px; }
+        .view-switch { display: inline-grid; grid-template-columns: 1fr 1fr; padding: 3px; border: 1px solid var(--line); border-radius: 8px; background: #eef2f6; }
+        .view-switch-btn { min-width: 78px; height: 30px; padding: 0 10px; border: 0; border-radius: 6px; background: transparent; color: #526170; font-size: 12px; font-weight: 900; cursor: pointer; }
+        .view-switch-btn.active { background: #2c3e50; color: #fff; box-shadow: 0 2px 6px rgba(31,42,55,0.14); }
+        .settings-open-btn { height: 36px; padding: 0 14px; border: 1px solid #2c3e50; border-radius: 7px; background: #fff; color: #2c3e50; font-size: 12px; font-weight: 900; cursor: pointer; }
+        .settings-open-btn:hover { background: #f3f6f9; transform: translateY(-1px); }
         
         .teams-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; align-items: stretch; }
         .team-card { background: var(--panel-soft); border: 1px solid var(--line-soft); border-radius: 8px; padding: 14px; border-top: 4px solid; overflow: visible; display: flex; flex-direction: column; }
@@ -271,6 +277,16 @@
         .modal-title { font-size: 22px; font-weight: bold; margin-top: 0; margin-bottom: 10px; }
         .modal-manager-info { font-size: 14px; color: #fff; display: inline-block; padding: 4px 10px; border-radius: 4px; margin-bottom: 15px; font-weight: bold; background: #95a5a6; }
         .modal-body { font-size: 15px; line-height: 1.6; color: #333; max-height: 400px; overflow-y: auto; border-top: 2px solid #f1f3f5; padding-top: 15px; }
+        .settings-modal-content { max-width: 900px; padding: 24px; }
+        .settings-modal-title { margin: 0 0 14px 0; color: #182230; font-size: 22px; font-weight: 900; }
+        .settings-table-wrap { max-height: 68vh; overflow: auto; border: 1px solid var(--line); border-radius: 8px; }
+        .settings-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .settings-table th { position: sticky; top: 0; z-index: 1; padding: 10px 12px; border-bottom: 1px solid var(--line); background: #eef3f8; color: #334155; text-align: left; font-weight: 900; }
+        .settings-table td { padding: 8px 12px; border-bottom: 1px solid var(--line-soft); background: #fff; vertical-align: middle; }
+        .settings-table tr:last-child td { border-bottom: 0; }
+        .settings-table select { width: 100%; min-width: 118px; height: 32px; border: 1px solid #cbd5df; border-radius: 6px; background: #fff; color: #26323f; font-weight: 800; }
+        .settings-contract-badge { display: inline-flex; align-items: center; min-height: 24px; padding: 3px 8px; border-radius: 999px; background: #eef8f1; color: #2e7d32; font-size: 12px; font-weight: 900; white-space: nowrap; }
+        .settings-contract-badge.uncontracted { background: #f1f3f5; color: #6c757d; border: 1px dashed #adb5bd; }
         .schedule-item { margin-bottom: 15px; background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 5px solid #bdc3c7; }
         .schedule-date { font-weight: bold; margin-bottom: 5px; display: block; font-size: 16px; color: #2c3e50; }
 
@@ -301,6 +317,13 @@
             font-weight: 900;
             vertical-align: 1px;
         }
+
+        body.view-mode-week .uni-node:not(.contract-uncontracted)[data-week="pre"] { background-color: #9b59b6 !important; color: #fff !important; border-color: #9b59b6 !important; border-radius: 18px !important; }
+        body.view-mode-week .uni-node:not(.contract-uncontracted)[data-week="w1"] { background-color: #e74c3c !important; color: #fff !important; border-color: #e74c3c !important; border-radius: 18px !important; }
+        body.view-mode-week .uni-node:not(.contract-uncontracted)[data-week="w2"] { background-color: #3498db !important; color: #fff !important; border-color: #3498db !important; border-radius: 18px !important; }
+        body.view-mode-week .uni-node:not(.contract-uncontracted)[data-week="w3"] { background-color: #27ae60 !important; color: #fff !important; border-color: #27ae60 !important; border-radius: 18px !important; }
+        body.view-mode-week .uni-node:not(.contract-uncontracted)[data-week="tbd"] { background-color: #7f8c8d !important; color: #fff !important; border-color: #7f8c8d !important; border-radius: 18px !important; }
+        body.view-mode-week .uni-node:not(.contract-uncontracted)::before { color: rgba(255,255,255,0.9) !important; }
 
         .uncontracted-section {
             background: var(--panel-bg);
@@ -366,6 +389,9 @@
             .outside-bottom-row { grid-template-columns: 1fr; }
             .outside-region-label { font-size: 16px; }
             .team-settings-header { align-items: flex-start; flex-direction: column; gap: 8px; }
+            .team-header-actions { justify-content: flex-start; width: 100%; }
+            .view-switch { width: 100%; }
+            .settings-open-btn { width: 100%; }
             .uncontracted-grid { grid-template-columns: 1fr; }
             .uncontracted-header { align-items: flex-start; flex-direction: column; }
         }
@@ -529,7 +555,14 @@
     <div class="team-settings-container">
         <div class="team-settings-header">
             <h3>팀별 담당 학교 설정</h3>
-            <div class="auto-save-badge">실시간 연동 중</div>
+            <div class="team-header-actions">
+                <div class="view-switch" role="group" aria-label="지도 보기 방식">
+                    <button class="view-switch-btn active" id="viewModeTeamBtn" type="button" onclick="setDisplayMode('team')">팀별보기</button>
+                    <button class="view-switch-btn" id="viewModeWeekBtn" type="button" onclick="setDisplayMode('week')">주차별보기</button>
+                </div>
+                <button class="settings-open-btn" type="button" onclick="openSettingsModal()">설정</button>
+                <div class="auto-save-badge">실시간 연동 중</div>
+            </div>
         </div>
         
         <div class="teams-grid" id="teamsForm">
@@ -579,12 +612,35 @@
     </div>
 </div>
 
+<div class="modal-overlay" id="settingsModalOverlay" onclick="closeSettingsModal(event)">
+    <div class="modal-content settings-modal-content" onclick="event.stopPropagation()">
+        <span class="close-btn" onclick="closeSettingsModal()">&times;</span>
+        <h3 class="settings-modal-title">대학별 표시 설정</h3>
+        <div class="settings-table-wrap">
+            <table class="settings-table">
+                <thead>
+                    <tr>
+                        <th>대학</th>
+                        <th>권역</th>
+                        <th>주차</th>
+                        <th>계약여부</th>
+                        <th>상태</th>
+                    </tr>
+                </thead>
+                <tbody id="universitySettingsBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 <script>
     let currentFilterType = 'all';
     let currentFilterValue = 'all';
     
     // 다중 선택된 담당자 이름을 저장하는 배열 (토글용)
     let selectedManagers = [];
+    let displayMode = 'team';
+    const universityConfig = {};
 
     const pendingUnis = ["연세대(서울)", "서강대", "성균관대", "서경대"];
     
@@ -644,6 +700,115 @@
         "고려대(세종)": "<div class='schedule-item THEME_CLASS'><span class='schedule-date'>11.28 (토)</span>09:40 전 모집단위(약학과 제외)<br>14:30 약학과</div>"
     };
 
+    function getAllUniversityNames() {
+        const uniNames = new Set();
+        document.querySelectorAll('.uni-node').forEach(node => {
+            if (node.dataset.uni) uniNames.add(node.dataset.uni);
+        });
+        document.querySelectorAll('.uncontracted-school-btn').forEach(button => uniNames.add(button.textContent.trim()));
+        allUnis.forEach(uni => uniNames.add(uni));
+        Object.keys(scheduleData).forEach(uni => uniNames.add(uni));
+        Object.keys(uncontractedScheduleData).forEach(uni => uniNames.add(uni));
+        return Array.from(uniNames);
+    }
+
+    function getInitialWeek(uniName) {
+        const node = document.querySelector(`.uni-node[data-uni="${uniName}"]`);
+        if (node && node.dataset.week) return node.dataset.week;
+        if (uniName === '연세대(미래)') return 'pre';
+        return 'tbd';
+    }
+
+    function getInitialContract(uniName) {
+        const nodes = Array.from(document.querySelectorAll('.uni-node')).filter(node => node.dataset.uni === uniName);
+        if (nodes.some(node => node.dataset.contract === 'uncontracted')) return 'uncontracted';
+        if (pendingUnis.includes(uniName)) return 'uncontracted';
+        if (uncontractedScheduleData[uniName] && !scheduleData[uniName]) return 'uncontracted';
+        return 'contracted';
+    }
+
+    function ensureUniversityConfig(uniName) {
+        if (!universityConfig[uniName]) {
+            universityConfig[uniName] = {
+                week: getInitialWeek(uniName),
+                contract: getInitialContract(uniName)
+            };
+        }
+        return universityConfig[uniName];
+    }
+
+    function initUniversityConfig() {
+        getAllUniversityNames().forEach(uniName => ensureUniversityConfig(uniName));
+        applyUniversityConfigToDom();
+    }
+
+    function isUniUncontracted(uniName) {
+        return ensureUniversityConfig(uniName).contract === 'uncontracted';
+    }
+
+    function getUniversityWeek(uniName) {
+        return ensureUniversityConfig(uniName).week || 'tbd';
+    }
+
+    function getUniversityContract(uniName) {
+        return ensureUniversityConfig(uniName).contract || 'contracted';
+    }
+
+    function applyUniversityConfigToDom() {
+        Object.keys(universityConfig).forEach(uniName => {
+            const config = ensureUniversityConfig(uniName);
+            const nodes = document.querySelectorAll(`.uni-node[data-uni="${uniName}"]`);
+
+            nodes.forEach(node => {
+                node.dataset.week = config.week || 'tbd';
+                if (config.contract === 'uncontracted') {
+                    delete node.dataset.team;
+                    delete node.dataset.managerName;
+                    delete node.dataset.managerInfo;
+                    node.classList.remove('bg-team-t1', 'bg-team-t2', 'bg-team-t3', 'bg-team-t4');
+                    node.dataset.contract = 'uncontracted';
+                    node.classList.add('contract-uncontracted');
+                } else {
+                    delete node.dataset.contract;
+                    node.classList.remove('contract-uncontracted');
+                }
+            });
+        });
+    }
+
+    function setDisplayMode(mode) {
+        displayMode = mode === 'week' ? 'week' : 'team';
+        document.body.classList.toggle('view-mode-week', displayMode === 'week');
+
+        const teamBtn = document.getElementById('viewModeTeamBtn');
+        const weekBtn = document.getElementById('viewModeWeekBtn');
+        if (teamBtn) teamBtn.classList.toggle('active', displayMode === 'team');
+        if (weekBtn) weekBtn.classList.toggle('active', displayMode === 'week');
+
+        renderMap();
+    }
+
+    function unassignUniversity(uniName) {
+        document.querySelectorAll('.select-dropdown input').forEach(input => {
+            if (input.value === uniName) {
+                input.checked = false;
+                updateDisplay(input.closest('.custom-select'));
+            }
+        });
+    }
+
+    function setUniversitySetting(uniName, key, value) {
+        const config = ensureUniversityConfig(uniName);
+        config[key] = value;
+
+        if (key === 'contract' && value === 'uncontracted') {
+            unassignUniversity(uniName);
+        }
+
+        applyTeamSettings();
+        renderSettingsModal();
+    }
+
     function initDropdowns() {
         document.querySelectorAll('.select-dropdown').forEach(dropdown => {
             const defaults = (dropdown.dataset.default || "").split(',');
@@ -651,7 +816,7 @@
             allUnis.forEach(uni => {
                 const label = document.createElement('label');
                 const isChecked = defaults.includes(uni) ? "checked" : "";
-                const isPending = pendingUnis.includes(uni); 
+                const isPending = isUniUncontracted(uni); 
                 
                 label.innerHTML = `<input type="checkbox" value="${uni}" ${isChecked}> <span class="${isPending ? 'text-gray' : ''}">${uni}</span>`;
                 
@@ -683,7 +848,7 @@
             displayBox.innerHTML = "대학 선택";
         } else {
             displayBox.innerHTML = checked.map(val => {
-                return pendingUnis.includes(val) ? `<span class="text-gray">${val}</span>` : `<span>${val}</span>`;
+                return isUniUncontracted(val) ? `<span class="text-gray">${val}</span>` : `<span>${val}</span>`;
             }).join(', ');
         }
     }
@@ -723,6 +888,7 @@
             currentFilterType = 'manager';
         }
 
+        applyUniversityConfigToDom();
         renderMap();
     }
 
@@ -830,6 +996,83 @@
         return '일정 확인';
     }
 
+    function renderSettingsModal() {
+        const tbody = document.getElementById('universitySettingsBody');
+        if (!tbody) return;
+
+        tbody.innerHTML = '';
+        getAllUniversityNames().forEach(uniName => {
+            const config = ensureUniversityConfig(uniName);
+            const nodes = getNodesByUni(uniName);
+            const row = document.createElement('tr');
+
+            const nameCell = document.createElement('td');
+            nameCell.textContent = uniName;
+
+            const regionCell = document.createElement('td');
+            regionCell.textContent = getExportRegion(uniName, nodes);
+
+            const weekCell = document.createElement('td');
+            const weekSelect = document.createElement('select');
+            [
+                ['pre', '수능 이전'],
+                ['w1', '1주차'],
+                ['w2', '2주차'],
+                ['w3', '3주차'],
+                ['tbd', '일정 확인']
+            ].forEach(([value, labelText]) => {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = labelText;
+                weekSelect.appendChild(option);
+            });
+            weekSelect.value = config.week || 'tbd';
+            weekSelect.addEventListener('change', () => setUniversitySetting(uniName, 'week', weekSelect.value));
+            weekCell.appendChild(weekSelect);
+
+            const contractCell = document.createElement('td');
+            const contractSelect = document.createElement('select');
+            [
+                ['contracted', '계약'],
+                ['uncontracted', '미계약']
+            ].forEach(([value, labelText]) => {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = labelText;
+                contractSelect.appendChild(option);
+            });
+            contractSelect.value = config.contract || 'contracted';
+            contractSelect.addEventListener('change', () => setUniversitySetting(uniName, 'contract', contractSelect.value));
+            contractCell.appendChild(contractSelect);
+
+            const statusCell = document.createElement('td');
+            const badge = document.createElement('span');
+            badge.className = 'settings-contract-badge' + (config.contract === 'uncontracted' ? ' uncontracted' : '');
+            badge.textContent = config.contract === 'uncontracted' ? '미계약' : '계약';
+            statusCell.appendChild(badge);
+
+            row.appendChild(nameCell);
+            row.appendChild(regionCell);
+            row.appendChild(weekCell);
+            row.appendChild(contractCell);
+            row.appendChild(statusCell);
+            tbody.appendChild(row);
+        });
+    }
+
+    function openSettingsModal() {
+        renderSettingsModal();
+        const overlay = document.getElementById('settingsModalOverlay');
+        if (overlay) overlay.style.display = 'flex';
+    }
+
+    function closeSettingsModal(event) {
+        if (!event || event.target.id === 'settingsModalOverlay') {
+            const overlay = document.getElementById('settingsModalOverlay');
+            if (overlay) overlay.style.display = 'none';
+        }
+    }
+
     function getNodeTooltipText(node) {
         const uniName = node.dataset.uni || node.textContent.trim();
         const weekText = getWeekLabel(node.dataset.week);
@@ -895,8 +1138,8 @@
         const titleEl = document.getElementById('modalTitle');
         const managerEl = document.getElementById('modalManager');
         
-        const weekVal = node.dataset.week;
-        const teamVal = node.dataset.team;
+        const weekVal = node ? node.dataset.week : getUniversityWeek(uniName);
+        const teamVal = node ? node.dataset.team : '';
 
         titleEl.innerText = uniName + " 세부 일정";
         titleEl.className = 'modal-title';
@@ -907,7 +1150,7 @@
             managerEl.innerText = "담당자: " + node.dataset.managerInfo;
             managerEl.classList.add(`bg-team-${teamVal}`);
         } else {
-            managerEl.innerText = node.dataset.contract === 'uncontracted' ? "미계약 / 담당자 미배정" : "계약 / 담당자 미배정";
+            managerEl.innerText = getUniversityContract(uniName) === 'uncontracted' ? "미계약 / 담당자 미배정" : "계약 / 담당자 미배정";
             managerEl.style.backgroundColor = "#95a5a6";
         }
         
@@ -927,8 +1170,7 @@
         const bodyEl = document.getElementById('uncontractedDetailBody');
         if (!titleEl || !bodyEl) return;
 
-        const node = document.querySelector(`.uni-node[data-uni="${uniName}"]`);
-        const weekVal = node ? node.dataset.week : 'tbd';
+        const weekVal = getUniversityWeek(uniName);
         const themeClass = `border-week-${weekVal}`;
         const rawHtml = uncontractedScheduleData[uniName] || scheduleData[uniName] || "<div class='schedule-item THEME_CLASS'>일정 정보가 없습니다.</div>";
 
@@ -1008,12 +1250,14 @@
             const weekValues = Array.from(new Set(nodes.map(node => node.dataset.week).filter(Boolean)));
             const weekText = weekValues.length ? weekValues.map(getWeekLabel).join(', ') : '일정 확인';
             const rawSchedule = scheduleData[uniName] || uncontractedScheduleData[uniName] || '';
-            const isUncontracted = nodes.some(node => node.dataset.contract === 'uncontracted') || pendingUnis.includes(uniName) || (!!uncontractedScheduleData[uniName] && !scheduleData[uniName]);
+            const config = ensureUniversityConfig(uniName);
+            const exportWeek = weekValues.length ? weekText : getWeekLabel(config.week);
+            const isUncontracted = config.contract === 'uncontracted';
 
             return {
                 university: uniName,
                 region: getExportRegion(uniName, nodes),
-                week: uniName === '연세대(미래)' && weekText === '일정 확인' ? '수능 이전' : weekText,
+                week: exportWeek,
                 schedule: htmlToExportText(rawSchedule),
                 team: assignedNode ? getTeamLabel(assignedNode.dataset.team) : '',
                 manager: assignedNode ? (assignedNode.dataset.managerName || '') : '',
@@ -1086,6 +1330,8 @@
 
         const modal = document.getElementById('modalOverlay');
         if (modal) modal.style.display = 'none';
+        const settingsModal = document.getElementById('settingsModalOverlay');
+        if (settingsModal) settingsModal.style.display = 'none';
         const tooltip = document.getElementById('nodeTooltip');
         if (tooltip) tooltip.style.display = 'none';
 
@@ -1111,9 +1357,11 @@
     });
 
     window.onload = function() {
+        initUniversityConfig();
         initDropdowns();
         initNodeTooltips();
         applyTeamSettings();
+        setDisplayMode('team');
         selectUncontractedSchool('연세대(서울)', document.querySelector('.uncontracted-school-btn.active'));
     };
 </script>
