@@ -544,7 +544,7 @@
             
             <div class="team-card t2">
                 <h4 style="color: #16a085;">2팀</h4>
-                <div class="member-row"><span class="role-label">팀장</span><input type="text" class="name-input" value="김태원"><div class="custom-select"><div class="select-display" onclick="toggleDropdown(this)">대학 선택</div><div class="select-dropdown" data-default="숭실대,이화여대,인하대,한국전통문화대"></div></div><button class="mini-view-btn" onclick="triggerManagerFilter(this)">보기</button></div>
+                <div class="member-row"><span class="role-label">팀장</span><input type="text" class="name-input" value="김태원"><div class="custom-select"><div class="select-display" onclick="toggleDropdown(this)">대학 선택</div><div class="select-dropdown" data-default="숭실대,이화여대,인하대"></div></div><button class="mini-view-btn" onclick="triggerManagerFilter(this)">보기</button></div>
                 <div class="member-row"><span class="role-label">과장</span><input type="text" class="name-input" value="전운"><div class="custom-select"><div class="select-display" onclick="toggleDropdown(this)">대학 선택</div><div class="select-dropdown" data-default="고려대,상명대"></div></div><button class="mini-view-btn" onclick="triggerManagerFilter(this)">보기</button></div>
                 <div class="member-row"><span class="role-label">대리</span><input type="text" class="name-input" value="이효정"><div class="custom-select"><div class="select-display" onclick="toggleDropdown(this)">대학 선택</div><div class="select-dropdown" data-default="세종대,홍익대"></div></div><button class="mini-view-btn" onclick="triggerManagerFilter(this)">보기</button></div>
                 <div class="member-row"><span class="role-label">주임</span><input type="text" class="name-input" value="나한별"><div class="custom-select"><div class="select-display" onclick="toggleDropdown(this)">대학 선택</div><div class="select-dropdown" data-default="단국대,부산대,성신여대"></div></div><button class="mini-view-btn" onclick="triggerManagerFilter(this)">보기</button></div>
@@ -834,7 +834,7 @@
         const uniName = node.dataset.uni || node.textContent.trim();
         const weekText = getWeekLabel(node.dataset.week);
         const managerInfo = node.dataset.managerInfo;
-        let statusText = '담당자 미배정';
+        let statusText = '계약 / 담당자 미배정';
 
         if (managerInfo) {
             statusText = '담당: ' + managerInfo;
@@ -907,7 +907,7 @@
             managerEl.innerText = "담당자: " + node.dataset.managerInfo;
             managerEl.classList.add(`bg-team-${teamVal}`);
         } else {
-            managerEl.innerText = "담당자 미배정";
+            managerEl.innerText = node.dataset.contract === 'uncontracted' ? "미계약 / 담당자 미배정" : "계약 / 담당자 미배정";
             managerEl.style.backgroundColor = "#95a5a6";
         }
         
