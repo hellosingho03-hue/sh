@@ -17,6 +17,7 @@
         }
 
         body { font-family: 'Malgun Gothic', sans-serif; padding: 24px; background-color: var(--page-bg); color: var(--text); margin: 0; }
+        body.modal-open { overflow: hidden; }
         .container { max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
         h2 { text-align: left; color: #182230; margin: 0 0 4px; font-size: 26px; font-weight: 900; letter-spacing: 0; }
 
@@ -206,6 +207,7 @@
 
         .uni-node.dimmed { opacity: 0.15 !important; background-color: #e9ecef !important; color: #adb5bd !important; border-color: #dee2e6 !important; z-index: 1; box-shadow: none !important; pointer-events: none; }
         .uni-node.dimmed::before { color: #adb5bd !important; }
+        .uni-node.deleted-university { display: none !important; }
 
         .node-tooltip {
             position: fixed;
@@ -291,7 +293,7 @@
         .text-gray { color: #adb5bd !important; }
 
         /* 모달 (팝업창) 레이아웃 */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 100; align-items: center; justify-content: center; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 100; align-items: center; justify-content: center; overscroll-behavior: contain; }
         .modal-content { background: #fff; padding: 30px; border-radius: 12px; width: 90%; max-width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; }
         .schedule-modal-content { max-width: 620px; }
         .close-btn { position: absolute; top: 15px; right: 20px; font-size: 28px; cursor: pointer; color: #adb5bd; }
@@ -310,22 +312,28 @@
         .schedule-edit-panel.show { display: block; }
         .schedule-textarea { width: 100%; min-height: 170px; resize: vertical; border: 1px solid #cbd5df; border-radius: 8px; padding: 10px; box-sizing: border-box; font-family: 'Malgun Gothic', sans-serif; font-size: 13px; line-height: 1.5; color: #26323f; outline: none; }
         .schedule-textarea:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); }
-        .settings-modal-content { max-width: 900px; padding: 24px; }
+        .settings-modal-content { max-width: 1120px; max-height: calc(100vh - 48px); overflow: hidden; padding: 24px; display: flex; flex-direction: column; }
         .settings-modal-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
         .settings-modal-title { margin: 0; color: #182230; font-size: 22px; font-weight: 900; }
         .settings-modal-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+        .settings-add-group { display: inline-flex; align-items: center; gap: 6px; }
+        .settings-add-input { width: 128px; height: 34px; border: 1px solid #cbd5df; border-radius: 7px; padding: 0 9px; box-sizing: border-box; color: #26323f; font-size: 12px; font-weight: 800; outline: none; }
+        .settings-add-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); }
         .settings-action-btn { height: 34px; padding: 0 13px; border: 1px solid #cbd5df; border-radius: 7px; background: #fff; color: #334155; font-size: 12px; font-weight: 900; cursor: pointer; }
         .settings-action-btn:hover { background: #f3f6f9; transform: translateY(-1px); }
         .settings-action-btn.active { border-color: #6c757d; background: #6c757d; color: #fff; }
         .settings-save-btn { border-color: #2563eb; background: #2563eb; color: #fff; }
         .settings-save-btn:hover { border-color: #1d4ed8; background: #1d4ed8; }
         .settings-save-status { min-width: 64px; color: #6c7784; font-size: 12px; font-weight: 900; text-align: right; }
-        .settings-table-wrap { max-height: 68vh; overflow: auto; border: 1px solid var(--line); border-radius: 8px; }
+        .settings-table-wrap { max-height: min(68vh, calc(100vh - 160px)); overflow: auto; border: 1px solid var(--line); border-radius: 8px; overscroll-behavior: contain; }
         .settings-table { width: 100%; border-collapse: collapse; font-size: 13px; }
         .settings-table th { position: sticky; top: 0; z-index: 1; padding: 10px 12px; border-bottom: 1px solid var(--line); background: #eef3f8; color: #334155; text-align: left; font-weight: 900; }
         .settings-table td { padding: 8px 12px; border-bottom: 1px solid var(--line-soft); background: #fff; vertical-align: middle; }
         .settings-table tr:last-child td { border-bottom: 0; }
         .settings-table select { width: 100%; min-width: 118px; height: 32px; border: 1px solid #cbd5df; border-radius: 6px; background: #fff; color: #26323f; font-weight: 800; }
+        .settings-table .manager-select { min-width: 168px; }
+        .settings-delete-btn { height: 30px; padding: 0 10px; border: 1px solid #ef4444; border-radius: 6px; background: #fff; color: #b91c1c; font-size: 12px; font-weight: 900; cursor: pointer; white-space: nowrap; }
+        .settings-delete-btn:hover { background: #fff5f5; transform: translateY(-1px); }
         .settings-sort-btn { width: 100%; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
         .settings-sort-btn:hover { color: #182230; }
         .settings-sort-btn.active { color: #182230; }
@@ -647,7 +655,7 @@
 
 <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
     <div class="modal-content schedule-modal-content" onclick="event.stopPropagation()">
-        <span class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</span>
+        <span class="close-btn" onclick="closeScheduleModal()">&times;</span>
         <h3 class="modal-title" id="modalTitle">대학명</h3>
         <div class="modal-manager-info" id="modalManager">담당자 미배정</div>
         <div class="schedule-modal-actions">
@@ -669,6 +677,10 @@
         <div class="settings-modal-header">
             <h3 class="settings-modal-title">대학별 표시 설정</h3>
             <div class="settings-modal-actions">
+                <span class="settings-add-group">
+                    <input class="settings-add-input" id="settingsAddUniversityInput" type="text" placeholder="학교명" onkeydown="handleAddUniversityKey(event)">
+                    <button class="settings-action-btn" type="button" onclick="addUniversityFromSettings()">학교 추가</button>
+                </span>
                 <button class="settings-action-btn" id="settingsContractedOnlyBtn" type="button" onclick="toggleSettingsContractedOnly()">미계약 제외</button>
                 <button class="settings-action-btn settings-save-btn" type="button" onclick="saveUniversitySettings()">저장</button>
                 <span class="settings-save-status" id="settingsSaveStatus"></span>
@@ -682,6 +694,8 @@
                         <th><button class="settings-sort-btn" id="settingsSortRegionBtn" type="button" onclick="sortSettingsBy('region')" title="권역 기준 정렬">권역 <span class="settings-sort-indicator" id="settingsSortRegion">-</span></button></th>
                         <th><button class="settings-sort-btn" id="settingsSortWeekBtn" type="button" onclick="sortSettingsBy('week')" title="주차 기준 정렬">주차 <span class="settings-sort-indicator" id="settingsSortWeek">-</span></button></th>
                         <th><button class="settings-sort-btn" id="settingsSortContractBtn" type="button" onclick="sortSettingsBy('contract')" title="계약여부 기준 정렬">계약여부 <span class="settings-sort-indicator" id="settingsSortContract">-</span></button></th>
+                        <th>팀/담당자</th>
+                        <th>삭제</th>
                     </tr>
                 </thead>
                 <tbody id="universitySettingsBody"></tbody>
@@ -705,6 +719,9 @@
     const SCHEDULE_OVERRIDES_STORAGE_KEY = 'uplusEssayScheduleTextOverrides:v1';
     const universityConfig = {};
     const scheduleTextOverrides = {};
+    const customUniversities = new Set();
+    const deletedUniversities = new Set();
+    let savedAssignmentMap = null;
 
     const pendingUnis = ["연세대(서울)", "서강대", "성균관대", "서경대"];
     
@@ -773,7 +790,19 @@
         allUnis.forEach(uni => uniNames.add(uni));
         Object.keys(scheduleData).forEach(uni => uniNames.add(uni));
         Object.keys(uncontractedScheduleData).forEach(uni => uniNames.add(uni));
+        customUniversities.forEach(uni => uniNames.add(uni));
+        deletedUniversities.forEach(uni => uniNames.delete(uni));
         return Array.from(uniNames);
+    }
+
+    function getKnownUniversityNamesIncludingDeleted() {
+        const uniNames = new Set(getAllUniversityNames());
+        deletedUniversities.forEach(uni => uniNames.add(uni));
+        return Array.from(uniNames);
+    }
+
+    function isUniversityDeleted(uniName) {
+        return deletedUniversities.has(uniName);
     }
 
     function escapeHtml(value) {
@@ -845,7 +874,7 @@
     }
 
     function getInitialWeek(uniName) {
-        const node = document.querySelector(`.uni-node[data-uni="${uniName}"]`);
+        const node = getNodesByUni(uniName)[0];
         if (node && node.dataset.week) return node.dataset.week;
         if (uniName === '연세대(미래)') return 'pre';
         return 'tbd';
@@ -889,16 +918,37 @@
             if (!raw) return;
 
             const saved = JSON.parse(raw);
+            const savedCustom = Array.isArray(saved && saved.customUniversities) ? saved.customUniversities : [];
+            const savedDeleted = Array.isArray(saved && saved.deletedUniversities) ? saved.deletedUniversities : [];
+            savedCustom.forEach(uniName => {
+                const name = String(uniName || '').trim();
+                if (name) customUniversities.add(name);
+            });
+            savedDeleted.forEach(uniName => {
+                const name = String(uniName || '').trim();
+                if (name) {
+                    deletedUniversities.add(name);
+                    customUniversities.delete(name);
+                    delete universityConfig[name];
+                }
+            });
+
             const savedConfig = saved && saved.universityConfig ? saved.universityConfig : {};
-            const knownUnis = new Set(getAllUniversityNames());
+            const knownUnis = new Set(getKnownUniversityNamesIncludingDeleted());
 
             Object.entries(savedConfig).forEach(([uniName, config]) => {
                 if (!knownUnis.has(uniName)) return;
+                if (isUniversityDeleted(uniName)) return;
 
                 const current = ensureUniversityConfig(uniName);
                 if (config && isValidWeekValue(config.week)) current.week = config.week;
                 if (config && isValidContractValue(config.contract)) current.contract = config.contract;
             });
+
+            const savedAssignments = saved && saved.assignments && typeof saved.assignments === 'object' ? saved.assignments : null;
+            savedAssignmentMap = savedAssignments ? Object.fromEntries(
+                Object.entries(savedAssignments).filter(([uniName, value]) => knownUnis.has(uniName) && typeof value === 'string')
+            ) : null;
 
             universitySettingsDirty = false;
         } catch (error) {
@@ -910,6 +960,9 @@
         const payload = {
             version: 1,
             savedAt: new Date().toISOString(),
+            customUniversities: Array.from(customUniversities).filter(uniName => !isUniversityDeleted(uniName)),
+            deletedUniversities: Array.from(deletedUniversities),
+            assignments: getCurrentAssignmentMap(),
             universityConfig: {}
         };
 
@@ -975,9 +1028,17 @@
     }
 
     function applyUniversityConfigToDom() {
+        document.querySelectorAll('.uni-node').forEach(node => {
+            node.classList.toggle('deleted-university', isUniversityDeleted(node.dataset.uni));
+        });
+        document.querySelectorAll('.uncontracted-school-btn').forEach(button => {
+            button.style.display = isUniversityDeleted(button.textContent.trim()) ? 'none' : '';
+        });
+
         Object.keys(universityConfig).forEach(uniName => {
+            if (isUniversityDeleted(uniName)) return;
             const config = ensureUniversityConfig(uniName);
-            const nodes = document.querySelectorAll(`.uni-node[data-uni="${uniName}"]`);
+            const nodes = getNodesByUni(uniName);
 
             nodes.forEach(node => {
                 node.dataset.week = config.week || 'tbd';
@@ -1021,6 +1082,223 @@
         });
     }
 
+    function getTeamNameForManagerInfo(teamId) {
+        return teamId === 't4' ? '경영관리부' : getTeamLabel(teamId);
+    }
+
+    function getTeamRows() {
+        const rows = [];
+        ['t1', 't2', 't3', 't4'].forEach(teamId => {
+            const teamCard = document.querySelector(`.team-card.${teamId}`);
+            if (!teamCard) return;
+            Array.from(teamCard.querySelectorAll('.member-row')).forEach((row, rowIndex) => {
+                const role = row.querySelector('.role-label') ? row.querySelector('.role-label').innerText.trim() : '';
+                const managerName = row.querySelector('.name-input') ? row.querySelector('.name-input').value.trim() : '';
+                rows.push({
+                    value: `${teamId}|${rowIndex}`,
+                    teamId,
+                    rowIndex,
+                    row,
+                    role,
+                    managerName: managerName || '이름미상',
+                    teamLabel: getTeamLabel(teamId),
+                    managerInfo: `${getTeamNameForManagerInfo(teamId)} ${role} (${managerName || '이름미상'})`
+                });
+            });
+        });
+        return rows;
+    }
+
+    function getAssignmentOptions() {
+        return getTeamRows().map(meta => ({
+            value: meta.value,
+            label: `${meta.teamLabel} ${meta.role} ${meta.managerName}`,
+            meta
+        }));
+    }
+
+    function getAssignmentOptionByValue(value) {
+        return getAssignmentOptions().find(option => option.value === value) || null;
+    }
+
+    function createUniversityOptionLabel(uniName, checked) {
+        const label = document.createElement('label');
+        const input = document.createElement('input');
+        const text = document.createElement('span');
+        input.type = 'checkbox';
+        input.value = uniName;
+        input.checked = !!checked;
+        text.textContent = uniName;
+        text.classList.toggle('text-gray', isUniUncontracted(uniName));
+        label.classList.toggle('hidden-uncontracted', settingsContractedOnly && isUniUncontracted(uniName));
+        input.addEventListener('change', function() {
+            updateDisplay(label.closest('.custom-select'));
+            markUniversitySettingsDirty();
+            applyTeamSettings();
+            renderSettingsModal();
+        });
+        label.appendChild(input);
+        label.appendChild(document.createTextNode(' '));
+        label.appendChild(text);
+        return label;
+    }
+
+    function addUniversityOptionToDropdown(dropdown, uniName, checked) {
+        if (!dropdown) return null;
+        const existing = Array.from(dropdown.querySelectorAll('input')).find(input => input.value === uniName);
+        if (existing) {
+            if (checked) existing.checked = true;
+            return existing.closest('label');
+        }
+        const label = createUniversityOptionLabel(uniName, checked);
+        dropdown.appendChild(label);
+        return label;
+    }
+
+    function addUniversityOptionToDropdowns(uniName) {
+        document.querySelectorAll('.select-dropdown').forEach(dropdown => {
+            addUniversityOptionToDropdown(dropdown, uniName, false);
+            updateDisplay(dropdown.closest('.custom-select'));
+        });
+        refreshDropdownContractStyles();
+    }
+
+    function removeUniversityOptionFromDropdowns(uniName) {
+        document.querySelectorAll('.select-dropdown label').forEach(label => {
+            const input = label.querySelector('input');
+            if (input && input.value === uniName) {
+                const selectContainer = label.closest('.custom-select');
+                label.remove();
+                if (selectContainer) updateDisplay(selectContainer);
+            }
+        });
+    }
+
+    function getAssignmentValueForUni(uniName) {
+        const option = getAssignmentOptions().find(({ meta }) => {
+            return Array.from(meta.row.querySelectorAll('.select-dropdown input:checked')).some(input => input.value === uniName);
+        });
+        return option ? option.value : '';
+    }
+
+    function getAssignmentInfoForUni(uniName) {
+        const assignmentValue = getAssignmentValueForUni(uniName);
+        if (!assignmentValue) return null;
+        const option = getAssignmentOptionByValue(assignmentValue);
+        return option ? option.meta : null;
+    }
+
+    function getCurrentAssignmentMap() {
+        const assignments = {};
+        getAllUniversityNames().forEach(uniName => {
+            if (isUniversityDeleted(uniName) || isUniUncontracted(uniName)) return;
+            const assignmentValue = getAssignmentValueForUni(uniName);
+            if (assignmentValue) assignments[uniName] = assignmentValue;
+        });
+        return assignments;
+    }
+
+    function assignUniversityToRow(uniName, assignmentValue) {
+        const option = getAssignmentOptionByValue(assignmentValue);
+        if (!option) return false;
+        const dropdown = option.meta.row.querySelector('.select-dropdown');
+        addUniversityOptionToDropdown(dropdown, uniName, true);
+        const input = Array.from(dropdown.querySelectorAll('input')).find(candidate => candidate.value === uniName);
+        if (!input) return false;
+        input.checked = true;
+        updateDisplay(dropdown.closest('.custom-select'));
+        return true;
+    }
+
+    function setUniversityAssignment(uniName, assignmentValue, options) {
+        if (isUniversityDeleted(uniName)) return;
+        const shouldRender = !options || options.render !== false;
+        const shouldMarkDirty = !options || options.markDirty !== false;
+
+        unassignUniversity(uniName);
+        if (assignmentValue && !isUniUncontracted(uniName)) {
+            assignUniversityToRow(uniName, assignmentValue);
+        }
+
+        if (shouldMarkDirty) markUniversitySettingsDirty();
+        refreshDropdownContractStyles();
+        applyTeamSettings();
+        if (shouldRender) renderSettingsModal();
+    }
+
+    function applySavedAssignments() {
+        if (!savedAssignmentMap) return;
+
+        document.querySelectorAll('.select-dropdown input').forEach(input => {
+            input.checked = false;
+        });
+
+        Object.entries(savedAssignmentMap).forEach(([uniName, assignmentValue]) => {
+            if (isUniversityDeleted(uniName) || isUniUncontracted(uniName)) return;
+            assignUniversityToRow(uniName, assignmentValue);
+        });
+
+        document.querySelectorAll('.custom-select').forEach(selectContainer => updateDisplay(selectContainer));
+        savedAssignmentMap = null;
+    }
+
+    function handleAddUniversityKey(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            addUniversityFromSettings();
+        }
+    }
+
+    function addUniversityFromSettings() {
+        const input = document.getElementById('settingsAddUniversityInput');
+        const uniName = input ? input.value.trim() : '';
+        if (!uniName) {
+            updateSettingsSaveStatus('학교명 필요');
+            return;
+        }
+
+        const alreadyVisible = getAllUniversityNames().includes(uniName);
+        if (alreadyVisible) {
+            updateSettingsSaveStatus('이미 있음');
+            if (input) input.select();
+            return;
+        }
+
+        deletedUniversities.delete(uniName);
+        customUniversities.add(uniName);
+        ensureUniversityConfig(uniName);
+        universityConfig[uniName].week = universityConfig[uniName].week || 'tbd';
+        universityConfig[uniName].contract = universityConfig[uniName].contract || 'contracted';
+        addUniversityOptionToDropdowns(uniName);
+        if (input) input.value = '';
+
+        markUniversitySettingsDirty();
+        applyUniversityConfigToDom();
+        applyTeamSettings();
+        renderSettingsModal();
+    }
+
+    function deleteUniversityFromSettings(uniName) {
+        if (!confirm(`${uniName} 학교를 목록에서 삭제할까요?`)) return;
+
+        deletedUniversities.add(uniName);
+        customUniversities.delete(uniName);
+        delete universityConfig[uniName];
+        delete scheduleTextOverrides[uniName];
+        unassignUniversity(uniName);
+        removeUniversityOptionFromDropdowns(uniName);
+
+        if (activeScheduleUni === uniName) {
+            closeScheduleModal();
+            activeScheduleUni = '';
+        }
+
+        markUniversitySettingsDirty();
+        applyUniversityConfigToDom();
+        applyTeamSettings();
+        renderSettingsModal();
+    }
+
     function setUniversitySetting(uniName, key, value) {
         const config = ensureUniversityConfig(uniName);
         config[key] = value;
@@ -1050,18 +1328,8 @@
         document.querySelectorAll('.select-dropdown').forEach(dropdown => {
             const defaults = (dropdown.dataset.default || "").split(',');
             
-            allUnis.forEach(uni => {
-                const label = document.createElement('label');
-                const isChecked = defaults.includes(uni) ? "checked" : "";
-                const isPending = isUniUncontracted(uni); 
-                
-                label.innerHTML = `<input type="checkbox" value="${uni}" ${isChecked}> <span class="${isPending ? 'text-gray' : ''}">${uni}</span>`;
-                
-                label.querySelector('input').addEventListener('change', function() {
-                    updateDisplay(dropdown.parentElement);
-                    applyTeamSettings(); 
-                });
-                dropdown.appendChild(label);
+            getAllUniversityNames().forEach(uni => {
+                addUniversityOptionToDropdown(dropdown, uni, defaults.includes(uni));
             });
             updateDisplay(dropdown.parentElement);
         });
@@ -1159,8 +1427,8 @@
                 
                 checkedInputs.forEach(input => {
                     const uni = input.value;
-                    if (isUniUncontracted(uni)) return;
-                    const nodes = document.querySelectorAll(`.uni-node[data-uni="${uni}"]`);
+                    if (isUniUncontracted(uni) || isUniversityDeleted(uni)) return;
+                    const nodes = getNodesByUni(uni);
                     nodes.forEach(node => {
                         node.dataset.team = teamId;
                         node.dataset.managerName = name || "이름미상";
@@ -1351,17 +1619,45 @@
             contractSelect.addEventListener('change', () => setUniversitySetting(uniName, 'contract', contractSelect.value));
             contractCell.appendChild(contractSelect);
 
+            const managerCell = document.createElement('td');
+            const managerSelect = document.createElement('select');
+            managerSelect.className = 'manager-select';
+            const emptyOption = document.createElement('option');
+            emptyOption.value = '';
+            emptyOption.textContent = config.contract === 'uncontracted' ? '미계약은 배정 불가' : '미지정';
+            managerSelect.appendChild(emptyOption);
+            getAssignmentOptions().forEach(({ value, label }) => {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = label;
+                managerSelect.appendChild(option);
+            });
+            managerSelect.value = getAssignmentValueForUni(uniName);
+            managerSelect.disabled = config.contract === 'uncontracted';
+            managerSelect.addEventListener('change', () => setUniversityAssignment(uniName, managerSelect.value));
+            managerCell.appendChild(managerSelect);
+
+            const deleteCell = document.createElement('td');
+            const deleteButton = document.createElement('button');
+            deleteButton.className = 'settings-delete-btn';
+            deleteButton.type = 'button';
+            deleteButton.textContent = '삭제';
+            deleteButton.addEventListener('click', () => deleteUniversityFromSettings(uniName));
+            deleteCell.appendChild(deleteButton);
+
             row.appendChild(nameCell);
             row.appendChild(regionCell);
             row.appendChild(weekCell);
             row.appendChild(contractCell);
+            row.appendChild(managerCell);
+            row.appendChild(deleteCell);
             tbody.appendChild(row);
         });
 
         if (!tbody.children.length) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
-            cell.colSpan = 4;
+            cell.colSpan = 6;
             cell.textContent = '표시할 계약 학교가 없습니다.';
             cell.style.textAlign = 'center';
             cell.style.color = '#6c7784';
@@ -1371,17 +1667,30 @@
         }
     }
 
+    function updateBodyModalLock() {
+        const hasOpenModal = Array.from(document.querySelectorAll('.modal-overlay')).some(overlay => overlay.style.display === 'flex');
+        document.body.classList.toggle('modal-open', hasOpenModal);
+    }
+
+    function closeScheduleModal() {
+        const overlay = document.getElementById('modalOverlay');
+        if (overlay) overlay.style.display = 'none';
+        updateBodyModalLock();
+    }
+
     function openSettingsModal() {
         renderSettingsModal();
         updateSettingsSaveStatus(universitySettingsDirty ? '저장 필요' : '');
         const overlay = document.getElementById('settingsModalOverlay');
         if (overlay) overlay.style.display = 'flex';
+        updateBodyModalLock();
     }
 
     function closeSettingsModal(event) {
         if (!event || event.target.id === 'settingsModalOverlay') {
             const overlay = document.getElementById('settingsModalOverlay');
             if (overlay) overlay.style.display = 'none';
+            updateBodyModalLock();
         }
     }
 
@@ -1515,22 +1824,28 @@
     }
 
     function showDetails(uniName) {
-        const node = document.querySelector(`.uni-node[data-uni="${uniName}"]`);
+        const node = getAssignedNodeForUni(uniName);
         const titleEl = document.getElementById('modalTitle');
         const managerEl = document.getElementById('modalManager');
         activeScheduleUni = uniName;
         
         const weekVal = node ? node.dataset.week : getUniversityWeek(uniName);
         const teamVal = node ? node.dataset.team : '';
+        const assignmentInfo = getAssignmentInfoForUni(uniName);
 
         titleEl.innerText = uniName + " 세부 일정";
         titleEl.className = 'modal-title';
         if (weekVal) titleEl.classList.add(`theme-week-${weekVal}`);
         
         managerEl.className = 'modal-manager-info';
-        if (teamVal) {
+        if (assignmentInfo) {
+            managerEl.innerText = "담당자: " + assignmentInfo.managerInfo;
+            managerEl.classList.add(`bg-team-${assignmentInfo.teamId}`);
+            managerEl.style.backgroundColor = "";
+        } else if (teamVal) {
             managerEl.innerText = "담당자: " + node.dataset.managerInfo;
             managerEl.classList.add(`bg-team-${teamVal}`);
+            managerEl.style.backgroundColor = "";
         } else {
             managerEl.innerText = getUniversityContract(uniName) === 'uncontracted' ? "미계약 / 담당자 미배정" : "계약 / 담당자 미배정";
             managerEl.style.backgroundColor = "#95a5a6";
@@ -1542,6 +1857,7 @@
         setScheduleSaveStatus(Object.prototype.hasOwnProperty.call(scheduleTextOverrides, uniName) ? '저장됨' : '');
             
         document.getElementById('modalOverlay').style.display = 'flex';
+        updateBodyModalLock();
     }
 
     function selectUncontractedSchool(uniName, button) {
@@ -1578,6 +1894,8 @@
     }
 
     function getAssignmentSummary(uniName) {
+        const assignmentInfo = getAssignmentInfoForUni(uniName);
+        if (assignmentInfo) return assignmentInfo.managerInfo;
         const assignedNode = getAssignedNodeForUni(uniName);
         if (assignedNode && assignedNode.dataset.managerInfo) return assignedNode.dataset.managerInfo;
         return isUniUncontracted(uniName) ? '미계약 / 담당자 미배정' : '계약 / 담당자 미배정';
@@ -1697,18 +2015,10 @@
     function collectExportRows() {
         applyTeamSettings();
 
-        const uniNames = new Set();
-        document.querySelectorAll('.uni-node').forEach(node => {
-            if (node.dataset.uni) uniNames.add(node.dataset.uni);
-        });
-        document.querySelectorAll('.uncontracted-school-btn').forEach(button => uniNames.add(button.textContent.trim()));
-        allUnis.forEach(uni => uniNames.add(uni));
-        Object.keys(scheduleData).forEach(uni => uniNames.add(uni));
-        Object.keys(uncontractedScheduleData).forEach(uni => uniNames.add(uni));
-
-        return Array.from(uniNames).map(uniName => {
+        return getAllUniversityNames().map(uniName => {
             const nodes = getNodesByUni(uniName);
             const assignedNode = nodes.find(node => node.dataset.managerName || node.dataset.team) || nodes[0];
+            const assignmentInfo = getAssignmentInfoForUni(uniName);
             const weekValues = Array.from(new Set(nodes.map(node => node.dataset.week).filter(Boolean)));
             const weekText = weekValues.length ? weekValues.map(getWeekLabel).join(', ') : '일정 확인';
             const config = ensureUniversityConfig(uniName);
@@ -1720,9 +2030,9 @@
                 region: getExportRegion(uniName, nodes),
                 week: exportWeek,
                 schedule: getScheduleText(uniName),
-                team: assignedNode ? getTeamLabel(assignedNode.dataset.team) : '',
-                manager: assignedNode ? (assignedNode.dataset.managerName || '') : '',
-                managerInfo: assignedNode ? (assignedNode.dataset.managerInfo || '') : '',
+                team: assignmentInfo ? assignmentInfo.teamLabel : (assignedNode ? getTeamLabel(assignedNode.dataset.team) : ''),
+                manager: assignmentInfo ? assignmentInfo.managerName : (assignedNode ? (assignedNode.dataset.managerName || '') : ''),
+                managerInfo: assignmentInfo ? assignmentInfo.managerInfo : (assignedNode ? (assignedNode.dataset.managerInfo || '') : ''),
                 contract: isUncontracted ? '미계약' : '계약'
             };
         });
@@ -1793,6 +2103,7 @@
         if (modal) modal.style.display = 'none';
         const settingsModal = document.getElementById('settingsModalOverlay');
         if (settingsModal) settingsModal.style.display = 'none';
+        updateBodyModalLock();
         const tooltip = document.getElementById('nodeTooltip');
         if (tooltip) tooltip.style.display = 'none';
 
@@ -1806,7 +2117,7 @@
 
     function closeModal(event) {
         if(event.target.id === 'modalOverlay') {
-            document.getElementById('modalOverlay').style.display = 'none';
+            closeScheduleModal();
         }
     }
 
@@ -1821,6 +2132,7 @@
         initUniversityConfig();
         loadScheduleOverrides();
         initDropdowns();
+        applySavedAssignments();
         initNodeTooltips();
         applyTeamSettings();
         setDisplayMode('team');
