@@ -259,7 +259,7 @@
         .week-school-item { padding: 8px 10px; border: 1px solid #e1e7ee; border-radius: 7px; background: #fff; cursor: pointer; }
         .week-school-item:hover { border-color: #9aa7b3; transform: translateY(-1px); }
         .week-school-name { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: #26323f; font-size: 13px; font-weight: 900; }
-        .week-school-meta { margin-top: 4px; color: #6c7784; font-size: 11px; font-weight: 800; line-height: 1.35; }
+        .week-school-meta { margin-top: 4px; color: #6c7784; font-size: 11px; font-weight: 800; line-height: 1.35; white-space: pre-line; }
         .week-contract-badge { flex-shrink: 0; padding: 2px 6px; border-radius: 999px; background: #eef8f1; color: #2e7d32; font-size: 10px; font-weight: 900; }
         .week-contract-badge.uncontracted { background: #f1f3f5; color: #6c757d; border: 1px dashed #adb5bd; }
         .week-empty { padding: 16px 10px; color: #8a96a3; font-size: 12px; font-weight: 900; text-align: center; border: 1px dashed #cbd5df; border-radius: 7px; background: #fff; }
@@ -293,11 +293,23 @@
         /* 모달 (팝업창) 레이아웃 */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 100; align-items: center; justify-content: center; }
         .modal-content { background: #fff; padding: 30px; border-radius: 12px; width: 90%; max-width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; }
+        .schedule-modal-content { max-width: 620px; }
         .close-btn { position: absolute; top: 15px; right: 20px; font-size: 28px; cursor: pointer; color: #adb5bd; }
         .close-btn:hover { color: #dc3545; }
         .modal-title { font-size: 22px; font-weight: bold; margin-top: 0; margin-bottom: 10px; }
         .modal-manager-info { font-size: 14px; color: #fff; display: inline-block; padding: 4px 10px; border-radius: 4px; margin-bottom: 15px; font-weight: bold; background: #95a5a6; }
         .modal-body { font-size: 15px; line-height: 1.6; color: #333; max-height: 400px; overflow-y: auto; border-top: 2px solid #f1f3f5; padding-top: 15px; }
+        .schedule-modal-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin: -4px 0 12px 0; flex-wrap: wrap; }
+        .schedule-action-btn { height: 32px; padding: 0 12px; border: 1px solid #cbd5df; border-radius: 7px; background: #fff; color: #334155; font-size: 12px; font-weight: 900; cursor: pointer; }
+        .schedule-action-btn:hover { background: #f3f6f9; transform: translateY(-1px); }
+        .schedule-save-btn { border-color: #2563eb; background: #2563eb; color: #fff; display: none; }
+        .schedule-save-btn:hover { border-color: #1d4ed8; background: #1d4ed8; }
+        .schedule-cancel-btn { display: none; }
+        .schedule-save-status { color: #6c7784; font-size: 12px; font-weight: 900; min-width: 60px; text-align: right; }
+        .schedule-edit-panel { display: none; margin-top: 12px; }
+        .schedule-edit-panel.show { display: block; }
+        .schedule-textarea { width: 100%; min-height: 170px; resize: vertical; border: 1px solid #cbd5df; border-radius: 8px; padding: 10px; box-sizing: border-box; font-family: 'Malgun Gothic', sans-serif; font-size: 13px; line-height: 1.5; color: #26323f; outline: none; }
+        .schedule-textarea:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); }
         .settings-modal-content { max-width: 900px; padding: 24px; }
         .settings-modal-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
         .settings-modal-title { margin: 0; color: #182230; font-size: 22px; font-weight: 900; }
@@ -634,11 +646,20 @@
 <div class="node-tooltip" id="nodeTooltip"></div>
 
 <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
-    <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="modal-content schedule-modal-content" onclick="event.stopPropagation()">
         <span class="close-btn" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</span>
         <h3 class="modal-title" id="modalTitle">대학명</h3>
         <div class="modal-manager-info" id="modalManager">담당자 미배정</div>
+        <div class="schedule-modal-actions">
+            <button class="schedule-action-btn" id="scheduleEditBtn" type="button" onclick="toggleScheduleEditor()">일정 편집</button>
+            <button class="schedule-action-btn schedule-save-btn" id="scheduleSaveBtn" type="button" onclick="saveScheduleEdit()">저장</button>
+            <button class="schedule-action-btn schedule-cancel-btn" id="scheduleCancelBtn" type="button" onclick="cancelScheduleEdit()">취소</button>
+            <span class="schedule-save-status" id="scheduleSaveStatus"></span>
+        </div>
         <div class="modal-body" id="modalBody"></div>
+        <div class="schedule-edit-panel" id="scheduleEditPanel">
+            <textarea class="schedule-textarea" id="scheduleEditText" oninput="markScheduleEditDirty()"></textarea>
+        </div>
     </div>
 </div>
 
@@ -679,8 +700,11 @@
     let settingsSort = { key: 'university', direction: 'asc' };
     let settingsContractedOnly = false;
     let universitySettingsDirty = false;
+    let activeScheduleUni = '';
     const UNIVERSITY_SETTINGS_STORAGE_KEY = 'uplusEssayScheduleUniversitySettings:v1';
+    const SCHEDULE_OVERRIDES_STORAGE_KEY = 'uplusEssayScheduleTextOverrides:v1';
     const universityConfig = {};
+    const scheduleTextOverrides = {};
 
     const pendingUnis = ["연세대(서울)", "서강대", "성균관대", "서경대"];
     
@@ -750,6 +774,74 @@
         Object.keys(scheduleData).forEach(uni => uniNames.add(uni));
         Object.keys(uncontractedScheduleData).forEach(uni => uniNames.add(uni));
         return Array.from(uniNames);
+    }
+
+    function escapeHtml(value) {
+        return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function getDefaultScheduleHtml(uniName) {
+        return scheduleData[uniName] || uncontractedScheduleData[uniName] || "<div class='schedule-item THEME_CLASS'>일정 정보가 없습니다.</div>";
+    }
+
+    function getScheduleText(uniName) {
+        if (Object.prototype.hasOwnProperty.call(scheduleTextOverrides, uniName)) {
+            return scheduleTextOverrides[uniName];
+        }
+        return htmlToExportText(getDefaultScheduleHtml(uniName)) || '일정 정보가 없습니다.';
+    }
+
+    function textToScheduleHtml(text, themeClass) {
+        const normalized = (text || '').trim() || '일정 정보가 없습니다.';
+        return normalized
+            .split(/\n{2,}/)
+            .map(block => `<div class="schedule-item ${themeClass || ''}">${escapeHtml(block.trim()).replace(/\n/g, '<br>')}</div>`)
+            .join('');
+    }
+
+    function getScheduleDisplayHtml(uniName, themeClass) {
+        if (Object.prototype.hasOwnProperty.call(scheduleTextOverrides, uniName)) {
+            return textToScheduleHtml(scheduleTextOverrides[uniName], themeClass);
+        }
+        return getDefaultScheduleHtml(uniName).replace(/THEME_CLASS/g, themeClass || '');
+    }
+
+    function getScheduleSummary(uniName) {
+        const text = getScheduleText(uniName).replace(/\s+/g, ' ').trim();
+        if (!text) return '일정 정보가 없습니다.';
+        return text.length > 46 ? text.slice(0, 46) + '...' : text;
+    }
+
+    function loadScheduleOverrides() {
+        try {
+            const raw = localStorage.getItem(SCHEDULE_OVERRIDES_STORAGE_KEY);
+            if (!raw) return;
+
+            const saved = JSON.parse(raw);
+            const overrides = saved && saved.scheduleTextOverrides ? saved.scheduleTextOverrides : {};
+            const knownUnis = new Set(getAllUniversityNames());
+
+            Object.entries(overrides).forEach(([uniName, text]) => {
+                if (knownUnis.has(uniName) && typeof text === 'string') {
+                    scheduleTextOverrides[uniName] = text;
+                }
+            });
+        } catch (error) {
+            console.warn('저장된 세부일정을 불러오지 못했습니다.', error);
+        }
+    }
+
+    function saveScheduleOverrides() {
+        localStorage.setItem(SCHEDULE_OVERRIDES_STORAGE_KEY, JSON.stringify({
+            version: 1,
+            savedAt: new Date().toISOString(),
+            scheduleTextOverrides
+        }));
     }
 
     function getInitialWeek(uniName) {
@@ -1305,7 +1397,7 @@
             statusText = '미계약 / 담당자 미배정';
         }
 
-        return `${uniName}\n${weekText}\n${statusText}`;
+        return `${uniName}\n${weekText}\n${statusText}\n일정: ${getScheduleSummary(uniName)}`;
     }
 
     function moveNodeTooltip(event) {
@@ -1353,10 +1445,80 @@
         });
     }
 
+    function setScheduleEditVisible(visible) {
+        const panel = document.getElementById('scheduleEditPanel');
+        const saveBtn = document.getElementById('scheduleSaveBtn');
+        const cancelBtn = document.getElementById('scheduleCancelBtn');
+        const editBtn = document.getElementById('scheduleEditBtn');
+        const textarea = document.getElementById('scheduleEditText');
+
+        if (panel) panel.classList.toggle('show', visible);
+        if (saveBtn) saveBtn.style.display = visible ? 'inline-flex' : 'none';
+        if (cancelBtn) cancelBtn.style.display = visible ? 'inline-flex' : 'none';
+        if (editBtn) editBtn.textContent = visible ? '편집 중' : '일정 편집';
+        if (textarea && visible) {
+            textarea.value = getScheduleText(activeScheduleUni);
+            textarea.focus();
+        }
+    }
+
+    function setScheduleSaveStatus(text) {
+        const status = document.getElementById('scheduleSaveStatus');
+        if (status) status.textContent = text || '';
+    }
+
+    function toggleScheduleEditor() {
+        if (!activeScheduleUni) return;
+        const panel = document.getElementById('scheduleEditPanel');
+        setScheduleEditVisible(!panel || !panel.classList.contains('show'));
+        setScheduleSaveStatus('');
+    }
+
+    function cancelScheduleEdit() {
+        setScheduleEditVisible(false);
+        setScheduleSaveStatus('');
+    }
+
+    function markScheduleEditDirty() {
+        setScheduleSaveStatus('저장 필요');
+    }
+
+    function refreshActiveUncontractedDetail(uniName) {
+        const activeButton = document.querySelector('.uncontracted-school-btn.active');
+        if (activeButton && activeButton.textContent.trim() === uniName) {
+            selectUncontractedSchool(uniName, activeButton);
+        }
+    }
+
+    function saveScheduleEdit() {
+        if (!activeScheduleUni) return;
+
+        const textarea = document.getElementById('scheduleEditText');
+        const nextText = textarea ? textarea.value.trim() : '';
+        scheduleTextOverrides[activeScheduleUni] = nextText || '일정 정보가 없습니다.';
+
+        try {
+            saveScheduleOverrides();
+            setScheduleSaveStatus('저장됨');
+        } catch (error) {
+            console.error('세부일정 저장 실패', error);
+            setScheduleSaveStatus('저장 실패');
+            return;
+        }
+
+        const weekVal = getUniversityWeek(activeScheduleUni);
+        const themeClass = weekVal ? `border-week-${weekVal}` : '';
+        document.getElementById('modalBody').innerHTML = getScheduleDisplayHtml(activeScheduleUni, themeClass);
+        setScheduleEditVisible(false);
+        refreshActiveUncontractedDetail(activeScheduleUni);
+        renderWeekCards();
+    }
+
     function showDetails(uniName) {
         const node = document.querySelector(`.uni-node[data-uni="${uniName}"]`);
         const titleEl = document.getElementById('modalTitle');
         const managerEl = document.getElementById('modalManager');
+        activeScheduleUni = uniName;
         
         const weekVal = node ? node.dataset.week : getUniversityWeek(uniName);
         const teamVal = node ? node.dataset.team : '';
@@ -1374,9 +1536,10 @@
             managerEl.style.backgroundColor = "#95a5a6";
         }
         
-        let rawHtml = scheduleData[uniName] || uncontractedScheduleData[uniName] || "<div class='schedule-item'>일정 정보가 없습니다.</div>";
         const themeClass = weekVal ? `border-week-${weekVal}` : '';
-        document.getElementById('modalBody').innerHTML = rawHtml.replace(/THEME_CLASS/g, themeClass);
+        document.getElementById('modalBody').innerHTML = getScheduleDisplayHtml(uniName, themeClass);
+        setScheduleEditVisible(false);
+        setScheduleSaveStatus(Object.prototype.hasOwnProperty.call(scheduleTextOverrides, uniName) ? '저장됨' : '');
             
         document.getElementById('modalOverlay').style.display = 'flex';
     }
@@ -1392,10 +1555,9 @@
 
         const weekVal = getUniversityWeek(uniName);
         const themeClass = `border-week-${weekVal}`;
-        const rawHtml = uncontractedScheduleData[uniName] || scheduleData[uniName] || "<div class='schedule-item THEME_CLASS'>일정 정보가 없습니다.</div>";
 
         titleEl.innerText = uniName + " 세부 일정";
-        bodyEl.innerHTML = rawHtml.replace(/THEME_CLASS/g, themeClass);
+        bodyEl.innerHTML = getScheduleDisplayHtml(uniName, themeClass);
     }
 
     function getNodesByUni(uniName) {
@@ -1477,7 +1639,7 @@
 
                     const meta = document.createElement('div');
                     meta.className = 'week-school-meta';
-                    meta.textContent = `${getExportRegion(uniName, nodes)} · ${getAssignmentSummary(uniName)}`;
+                    meta.textContent = `${getExportRegion(uniName, nodes)} · ${getAssignmentSummary(uniName)}\n${getScheduleSummary(uniName)}`;
 
                     item.appendChild(nameLine);
                     item.appendChild(meta);
@@ -1549,7 +1711,6 @@
             const assignedNode = nodes.find(node => node.dataset.managerName || node.dataset.team) || nodes[0];
             const weekValues = Array.from(new Set(nodes.map(node => node.dataset.week).filter(Boolean)));
             const weekText = weekValues.length ? weekValues.map(getWeekLabel).join(', ') : '일정 확인';
-            const rawSchedule = scheduleData[uniName] || uncontractedScheduleData[uniName] || '';
             const config = ensureUniversityConfig(uniName);
             const exportWeek = weekValues.length ? weekText : getWeekLabel(config.week);
             const isUncontracted = config.contract === 'uncontracted';
@@ -1558,7 +1719,7 @@
                 university: uniName,
                 region: getExportRegion(uniName, nodes),
                 week: exportWeek,
-                schedule: htmlToExportText(rawSchedule),
+                schedule: getScheduleText(uniName),
                 team: assignedNode ? getTeamLabel(assignedNode.dataset.team) : '',
                 manager: assignedNode ? (assignedNode.dataset.managerName || '') : '',
                 managerInfo: assignedNode ? (assignedNode.dataset.managerInfo || '') : '',
@@ -1658,6 +1819,7 @@
 
     window.onload = function() {
         initUniversityConfig();
+        loadScheduleOverrides();
         initDropdowns();
         initNodeTooltips();
         applyTeamSettings();
