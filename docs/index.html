@@ -16,6 +16,7 @@
             --radius: 10px;
         }
 
+        *, *::before, *::after { box-sizing: border-box; }
         body { font-family: 'Malgun Gothic', sans-serif; padding: 24px; background-color: var(--page-bg); color: var(--text); margin: 0; }
         body.modal-open { overflow: hidden; }
         .container { max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
@@ -26,6 +27,7 @@
             grid-template-columns: 330px minmax(0, 1fr);
             gap: 18px;
             align-items: start;
+            width: 100%;
         }
         
         /* 필터링 버튼 영역 (상단) */
@@ -227,7 +229,7 @@
         }
 
         /* 팀 배정 설정 영역 (하단) */
-        .team-settings-container { background: var(--panel-bg); padding: 18px; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 0; border: 1px solid var(--line); }
+        .team-settings-container { width: 100%; background: var(--panel-bg); padding: 18px; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 0; border: 1px solid var(--line); }
         .team-settings-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 15px; }
         .team-settings-header h3 { margin: 0; color: #2c3e50; font-size: 17px; }
         .team-header-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
@@ -371,6 +373,7 @@
         }
 
         .uncontracted-section {
+            width: 100%;
             background: var(--panel-bg);
             padding: 18px;
             border-radius: var(--radius);
